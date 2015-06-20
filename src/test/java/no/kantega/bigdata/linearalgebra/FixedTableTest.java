@@ -1,4 +1,4 @@
-package no.kantega.bigdata.matrix;
+package no.kantega.bigdata.linearalgebra;
 
 import org.junit.Test;
 

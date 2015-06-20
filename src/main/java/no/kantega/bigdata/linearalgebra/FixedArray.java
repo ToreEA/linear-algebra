@@ -3,7 +3,7 @@
 // express written consent of Statens vegvesen is strictly prohibited.
 // Copyright © 2015 Statens vegvesen
 // ALL RIGHTS RESERVED
-package no.kantega.bigdata.matrix;
+package no.kantega.bigdata.linearalgebra;
 
 /**
  * TODO: Purpose and responsibility
@@ -51,6 +51,15 @@ public class FixedArray implements Array {
     @Override
     public int size() {
         return size;
+    }
+
+    @Override
+    public Array copy() {
+        double[] valuesCopy = new double[size];
+        for (int i = 0; i < size; i++) {
+            valuesCopy[i] = get(i);
+        }
+        return new FixedArray(size, valuesCopy, 0, 1);
     }
 
     private int addressOf(int index) {

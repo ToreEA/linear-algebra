@@ -3,7 +3,9 @@
 // express written consent of Statens vegvesen is strictly prohibited.
 // Copyright © 2015 Statens vegvesen
 // ALL RIGHTS RESERVED
-package no.kantega.bigdata.matrix;
+package no.kantega.bigdata.linearalgebra;
+
+import no.kantega.bigdata.linearalgebra.utils.NumberFormatter;
 
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -14,6 +16,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
+import static no.kantega.bigdata.linearalgebra.utils.Assert.require;
 
 /**
  * TODO: Purpose and responsibility
@@ -46,15 +49,15 @@ public class Vector {
     }
 
     private Vector(int dimension) {
-        if (dimension < 1) {
-            throw new IllegalArgumentException("dimension must be 1 or higher");
-        }
+        require(() -> dimension >= 1, "dimension must be 1 or higher");
+
         this.dimension = dimension;
         this.components = FixedArray.ofSize(dimension);
     }
 
     private Vector(Array components) {
         requireNonNull(components, "components can't be null");
+
         this.dimension = components.size();
         this.components = components;
     }
@@ -64,16 +67,14 @@ public class Vector {
     }
 
     public double at(int index) {
-        if (index < 1 || index > dimension()) {
-            throw new IllegalArgumentException(String.format("index must be between 1 and %d", dimension()));
-        }
+        requireValidIndex(index);
+
         return components.get(index);
     }
 
     public void setAt(int index, double value) {
-        if (index < 1 || index > dimension()) {
-            throw new IllegalArgumentException(String.format("index must be between 1 and %d", dimension()));
-        }
+        requireValidIndex(index);
+
         components.set(index, value);
     }
 
@@ -82,7 +83,11 @@ public class Vector {
     }
 
     public Stream<Double> components() {
-        return indices().boxed().map(this::at);
+        return indices().boxed().map(components::get);
+    }
+
+    public Vector copy() {
+        return new Vector(components.copy());
     }
 
     public Vector fill(double value) {
@@ -97,10 +102,9 @@ public class Vector {
 
     public Vector add(Vector other) {
         requireNonNull(other, "other can't be null");
-        if (other.dimension() != this.dimension()) {
-            throw new IllegalArgumentException("can't add vectors of different dimension");
-        }
-        return transform((i, v) -> v + other.at(i));
+        require(() -> other.dimension() == this.dimension(), "can't add vectors of different dimension");
+
+        return transform((i, v) -> v + other.components.get(i));
     }
 
     public Vector multiply(double value) {
@@ -110,11 +114,10 @@ public class Vector {
     // = dot product or scalar product
     public double innerProduct(Vector other) {
         requireNonNull(other, "other can't be null");
-        if (other.dimension() != this.dimension()) {
-            throw new IllegalArgumentException("can't get inner product for vectors of different dimension");
-        }
+        require(() -> other.dimension() == this.dimension(), "can't get inner product for vectors of different dimension");
+
         return indices().boxed()
-                .map(i -> at(i) * other.at(i))
+                .map(i -> components.get(i) * other.components.get(i))
                 .reduce(0.0d, Double::sum);
     }
 
@@ -142,40 +145,53 @@ public class Vector {
 
     public Vector transform(BiFunction<Integer, Double, Double> func) {
         requireNonNull(func, "func can't be null");
-        indices().forEach(i -> setAt(i, func.apply(i, at(i))));
+        indices().forEach(i -> components.set(i, func.apply(i, components.get(i))));
         return this;
     }
 
     public Vector forEach(BiConsumer<Integer, Double> consumer) {
         requireNonNull(consumer, "consumer can't be null");
-        indices().forEach(i -> consumer.accept(i, at(i)));
+        indices().forEach(i -> consumer.accept(i, components.get(i)));
         return this;
     }
 
     public boolean anyMatch(BiPredicate<Integer, Double> predicate) {
         requireNonNull(predicate, "predicate can't be null");
-        return indices().anyMatch(i -> predicate.test(i, at(i)));
+        return indices().anyMatch(i -> predicate.test(i, components.get(i)));
     }
 
     @Override
     public String toString() {
-        return toString(e -> String.format("%.1f", e));
+        return toString(NumberFormatter.pretty());
     }
 
     public String toString(Function<Double, String> formatter) {
         requireNonNull(formatter, "formatter can't be null");
         StringBuilder sb = new StringBuilder();
-        for (int index = 1; index <= dimension(); index++) {
-            if (index > 1) {
-                sb.append(" ");
-            }
-            sb.append(formatter.apply(at(index)));
-        }
+        indices().forEach(i -> {
+            sb.append(formatter.apply(components.get(i)));
+            sb.append(i == dimension ? "\n" : " ");
+        });
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Vector)) return false;
+
+        Vector other = (Vector) o;
+
+        return dimension == other.dimension() && !anyMatch((i,v) -> v != other.components.get(i));
     }
 
     // Gram-Schmidt Orthonormalization
     public static List<Vector> orthonormalize(List<Vector> vectors) {
         return vectors;
+    }
+
+    private int requireValidIndex(int index) {
+        require(() -> index >= 1 && index <= dimension, "index must be between 1 and %d", dimension);
+        return index;
     }
 }

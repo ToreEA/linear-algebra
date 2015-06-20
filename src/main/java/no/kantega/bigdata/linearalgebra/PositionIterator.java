@@ -3,7 +3,7 @@
 // express written consent of Statens vegvesen is strictly prohibited.
 // Copyright © 2015 Statens vegvesen
 // ALL RIGHTS RESERVED
-package no.kantega.bigdata.matrix;
+package no.kantega.bigdata.linearalgebra;
 
 import java.util.Iterator;
 import java.util.function.Function;
@@ -58,11 +58,29 @@ public class PositionIterator implements Iterator<Position> {
             return Position.of(nextRow, nextCol);
         });
     }
-/*
+
     public static PositionIterator diagonal(Size size) {
+        return new PositionIterator(size, Position.of(1,1), Position.of(size.rows(),size.cols()), p -> {
+            int nextCol = p.col() + 1;
+            int nextRow = p.row() + 1;
+            return Position.of(nextRow, nextCol);
+        });
 
     }
 
+    public static PositionIterator lowerTriangle(Size size) {
+        return new PositionIterator(size, Position.of(2,1), Position.of(size.rows(),size.cols()-1), p -> {
+            int nextRow = p.row();
+            int nextCol = p.col() + 1;
+            if (nextCol == p.row()) {
+                nextCol = 1;
+                nextRow++;
+            }
+            return Position.of(nextRow, nextCol);
+        });
+    }
+
+/*
     public static PositionIterator upperTriangle(Size size) {
 
     }

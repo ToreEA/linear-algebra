@@ -3,17 +3,25 @@
 // express written consent of Statens vegvesen is strictly prohibited.
 // Copyright © 2015 Statens vegvesen
 // ALL RIGHTS RESERVED
-package no.kantega.bigdata.matrix;
+package no.kantega.bigdata.linearalgebra;
 
 /**
  * TODO: Purpose and responsibility
  *
  * @author Tore Eide Andersen (Kantega AS)
  */
-public interface Array {
-    double get(int index);
+public interface Table {
+    double get(int row, int col);
 
-    void set(int index, double value);
+    void set(int row, int col, double value);
 
-    int size();
+    Array row(int row);
+
+    Array column(int col);
+
+    Size size();
+
+    Table copy();
+
+    void transpose();
 }

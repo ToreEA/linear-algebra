@@ -1,7 +1,11 @@
-package no.kantega.bigdata.matrix;
+package no.kantega.bigdata.linearalgebra;
 
+import no.kantega.bigdata.linearalgebra.utils.NumberFormatter;
 import org.junit.Test;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 import java.util.function.Function;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -63,6 +67,16 @@ public class MatrixTest {
     }
 
     @Test
+    public void shouldAdd() {
+        Matrix a = Matrix.fromRowMajorSequence(3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+        Matrix b = Matrix.fromRowMajorSequence(3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+
+        Matrix result = a.add(b);
+
+        assertEqualToNoDecimals(result, "3 3 3\n3 3 3\n3 3 3\n");
+    }
+
+    @Test
     public void shouldDetectOrthogonality() {
         Matrix m = Matrix.fromRowMajorSequence(3, 3, 1.0d, 0.0d, 0.0d, 0.0d, 3.0d / 5.0d, -4.0d / 5.0d, 0.0d, 4.0d / 5.0d, 3.0d / 5.0d);
         assertThat(m.isOrthogonal(), is(true));
@@ -88,37 +102,46 @@ public class MatrixTest {
 
     @Test
     public void shouldPerformGaussianElimination() {
-        Matrix m = Matrix.fromRowMajorSequence(3, 4, 9,3,4,7, 4,3,4,8, 1,1,1,3).gaussianElimination();
-        assertEqualToNoDecimals(m, "1 1 1 3\n0 -1 0 -4\n0 0 -5 4\n");
+        Matrix m = Matrix.fromRowMajorSequence(3, 4, 2,1,1,5, 4,-6,0,-2, -2,7,2,9).gaussianElimination();
+        assertEqualToNoDecimals(m, "4 -6 0 -2\n0 4 1 6\n0 0 1 2\n");
+    }
+
+    @Test
+    public void shouldPerformGaussJordanElimination() {
+        Matrix m = Matrix.fromRowMajorSequence(3, 6, 4,3,2,1,0,0, 5,6,3,0,1,0, 3,5,2,0,0,1).gaussJordanElimination();
+        assertEqualToNoDecimals(m, "1 0 0 3 -4 3\n0 1 0 1 -2 2\n0 0 1 -7 11 -9\n");
+    }
+
+    @Test
+    public void shouldComputeDeterminantOfRegularMatrix() {
+        Matrix m = Matrix.fromRowMajorSequence(3, 3, -2,2,-3, -1,1,3, 2,0,-1);
+        assertThat(m.determinant(), is(18.0d));
+    }
+
+    @Test
+    public void shouldComputeDeterminantOfTriangualarMatrix() {
+        Matrix m = Matrix.fromRowMajorSequence(3, 3, 4,-6,0, 0,4,1, 0,0,1);
+        assertThat(m.determinant(), is(4.0d * 4.0d * 1.0d));
+    }
+
+    @Test
+    public void shouldDetectEqualMatrix() {
+        Matrix m = Matrix.fromRowMajorSequence(3, 3, 9,3,4, 7,4,3, 4,8,6);
+        Matrix n = Matrix.fromRowMajorSequence(3, 3, 9,3,4, 7,4,3, 4,8,6);
+        assertThat(m, equalTo(n));
     }
 
     private void assertEqualTo(Matrix matrix, String expected) {
-        String actual = matrix.toString(decimals());
+        String actual = matrix.toString(NumberFormatter.compact());
         assertThat(actual, equalTo(expected));
     }
 
     private void assertEqualToNoDecimals(Matrix matrix, String expected) {
-        String actual = matrix.toString(noDecimals());
+        String actual = matrix.toString(NumberFormatter.compactNoDecimals());
         assertThat(actual, equalTo(expected));
-    }
-
-    private Function<Double, String> noDecimals() {
-        return v -> String.format("%.0f", v);
-    }
-
-    private Function<Double, String> decimals() {
-        return v -> String.format("%.1f", v);
     }
 
     private void print(String msg, Matrix m) {
         System.out.print(msg + "\n" + m.toString());
     }
 }
-
-/*
-1    3/9     4/9 7/9
-0    3-12/9  4-16/9  8 -
-1    1       1   3
-
-
- */

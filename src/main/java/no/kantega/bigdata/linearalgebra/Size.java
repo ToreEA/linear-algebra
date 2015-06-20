@@ -3,9 +3,9 @@
 // express written consent of Statens vegvesen is strictly prohibited.
 // Copyright © 2015 Statens vegvesen
 // ALL RIGHTS RESERVED
-package no.kantega.bigdata.matrix;
+package no.kantega.bigdata.linearalgebra;
 
-import static no.kantega.bigdata.matrix.utils.Argument.require;
+import static no.kantega.bigdata.linearalgebra.utils.Assert.require;
 
 /**
  * TODO: Purpose and responsibility
