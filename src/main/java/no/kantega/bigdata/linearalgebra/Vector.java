@@ -5,6 +5,8 @@
 // ALL RIGHTS RESERVED
 package no.kantega.bigdata.linearalgebra;
 
+import no.kantega.bigdata.linearalgebra.buffer.FixedVectorBuffer;
+import no.kantega.bigdata.linearalgebra.buffer.VectorBuffer;
 import no.kantega.bigdata.linearalgebra.utils.NumberFormatter;
 
 import java.util.List;
@@ -19,13 +21,13 @@ import static java.util.Objects.requireNonNull;
 import static no.kantega.bigdata.linearalgebra.utils.Assert.require;
 
 /**
- * TODO: Purpose and responsibility
+ * Implements a vector
  *
  * @author Tore Eide Andersen (Kantega AS)
  */
 public class Vector {
     private final int dimension;
-    private final Array components;
+    private final VectorBuffer components;
 
     public static Vector of(double... values) {
         requireNonNull(values, "values can't be null");
@@ -44,18 +46,18 @@ public class Vector {
         return new Vector(dimension).fill(value);
     }
 
-    public static Vector from(Array array) {
-        return new Vector(array);
+    public static Vector from(VectorBuffer buffer) {
+        return new Vector(buffer);
     }
 
     private Vector(int dimension) {
         require(() -> dimension >= 1, "dimension must be 1 or higher");
 
         this.dimension = dimension;
-        this.components = FixedArray.ofSize(dimension);
+        this.components = FixedVectorBuffer.allocate(dimension);
     }
 
-    private Vector(Array components) {
+    private Vector(VectorBuffer components) {
         requireNonNull(components, "components can't be null");
 
         this.dimension = components.size();

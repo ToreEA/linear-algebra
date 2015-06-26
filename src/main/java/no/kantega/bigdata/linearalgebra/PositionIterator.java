@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.function.Function;
 
 /**
- * TODO: Purpose and responsibility
+ * Implements an iterator over matrix element positions
  *
  * @author Tore Eide Andersen (Kantega AS)
  */

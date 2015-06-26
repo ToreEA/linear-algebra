@@ -5,11 +5,10 @@
 // ALL RIGHTS RESERVED
 package no.kantega.bigdata.linearalgebra;
 
+import no.kantega.bigdata.linearalgebra.buffer.FixedMatrixBuffer;
+import no.kantega.bigdata.linearalgebra.buffer.MatrixBuffer;
 import no.kantega.bigdata.linearalgebra.utils.NumberFormatter;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -24,13 +23,13 @@ import static no.kantega.bigdata.linearalgebra.utils.Assert.require;
 import static no.kantega.bigdata.linearalgebra.utils.StreamUtils.asStream;
 
 /**
- * TODO: Purpose and responsibility
+ * Implements a matrix
  *
  * @author Tore Eide Andersen (Kantega AS)
  */
 public class Matrix {
     private Size size;
-    private final Table elements;
+    private final MatrixBuffer elements;
 
     public static Matrix identity(int rows, int cols) {
         require(() -> rows == cols, "The identity matrix should be a square matrix");
@@ -58,10 +57,10 @@ public class Matrix {
 
     private Matrix(int rows, int cols) {
         this.size = Size.of(rows, cols);
-        this.elements = FixedTable.ofSize(rows,cols);
+        this.elements = FixedMatrixBuffer.allocate(rows, cols);
     }
 
-    private Matrix(Table elements) {
+    private Matrix(MatrixBuffer elements) {
         requireNonNull(elements, "elements can't be null");
         this.size = elements.size();
         this.elements = elements;

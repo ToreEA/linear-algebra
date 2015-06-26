@@ -5,9 +5,8 @@
 // ALL RIGHTS RESERVED
 package no.kantega.bigdata.linearalgebra.utils;
 
-
 /**
- * TODO: Purpose and responsibility
+ * Provides assertions constructs for arguments and object state
  *
  * @author Tore Eide Andersen (Kantega AS)
  */

@@ -1,7 +1,9 @@
 package no.kantega.bigdata.linearalgebra;
 
 /**
- * Created by Tore on 07.06.15.
+ * A runtime exception thrown when a singular matrix is encountered when not expected
+ *
+ * @author Tore Eide Andersen (Kantega AS)
  */
 public class SingularMatrixException extends RuntimeException {
 }

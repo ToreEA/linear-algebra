@@ -8,7 +8,7 @@ package no.kantega.bigdata.linearalgebra;
 import static no.kantega.bigdata.linearalgebra.utils.Assert.require;
 
 /**
- * TODO: Purpose and responsibility
+ * Represents the size of a matrix
  *
  * @author Tore Eide Andersen (Kantega AS)
  */

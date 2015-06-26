@@ -3,17 +3,12 @@ package no.kantega.bigdata.linearalgebra;
 import no.kantega.bigdata.linearalgebra.utils.NumberFormatter;
 import org.junit.Test;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
-import java.util.function.Function;
-
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 /**
- * TODO: Purpose and responsibility
+ * Unit test for the Matrix class
  *
  * @author Tore Eide Andersen (Kantega AS)
  */

@@ -6,7 +6,9 @@ import java.util.Locale;
 import java.util.function.Function;
 
 /**
- * Created by Tore on 10.06.15.
+ * Formats a double precision number as a string
+ *
+ * @author Tore Eide Andersen (Kantega AS)
  */
 public class NumberFormatter implements Function<Double, String> {
     private final int width;

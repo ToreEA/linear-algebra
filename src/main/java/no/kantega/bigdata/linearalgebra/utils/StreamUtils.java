@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * TODO: Purpose and responsibility
+ * Provides general purpose stream utilities
  *
  * @author Tore Eide Andersen (Kantega AS)
  */

@@ -6,7 +6,7 @@
 package no.kantega.bigdata.linearalgebra;
 
 /**
- * TODO: Purpose and responsibility
+ * Represents the position of a matrix element
  *
  * @author Tore Eide Andersen (Kantega AS)
  */

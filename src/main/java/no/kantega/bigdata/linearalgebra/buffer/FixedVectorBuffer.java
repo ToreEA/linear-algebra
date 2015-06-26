@@ -3,35 +3,35 @@
 // express written consent of Statens vegvesen is strictly prohibited.
 // Copyright © 2015 Statens vegvesen
 // ALL RIGHTS RESERVED
-package no.kantega.bigdata.linearalgebra;
+package no.kantega.bigdata.linearalgebra.buffer;
 
 /**
- * TODO: Purpose and responsibility
+ * Implements a vector buffer of fixed size
  *
  * @author Tore Eide Andersen (Kantega AS)
  */
-public class FixedArray implements Array {
+public class FixedVectorBuffer implements VectorBuffer {
     private final int size;
     private final double[] values;
     private final int base;
     private final int stride;
 
-    public static Array ofSize(int size) {
-        return new FixedArray(size);
+    public static VectorBuffer allocate(int size) {
+        return new FixedVectorBuffer(size);
     }
 
-    public static Array from(int size, double[] values, int base, int stride) {
-        return new FixedArray(size, values, base, stride);
+    public static VectorBuffer from(int size, double[] values, int base, int stride) {
+        return new FixedVectorBuffer(size, values, base, stride);
     }
 
-    private FixedArray(int size) {
+    private FixedVectorBuffer(int size) {
         this.size = size;
         this.values = new double[size];
         this.base = 0;
         this.stride = 1;
     }
 
-    private FixedArray(int size, double[] values, int base, int stride) {
+    private FixedVectorBuffer(int size, double[] values, int base, int stride) {
         this.size = size;
         this.values = values;
         this.base = base;
@@ -54,12 +54,12 @@ public class FixedArray implements Array {
     }
 
     @Override
-    public Array copy() {
+    public VectorBuffer copy() {
         double[] valuesCopy = new double[size];
         for (int i = 0; i < size; i++) {
             valuesCopy[i] = get(i);
         }
-        return new FixedArray(size, valuesCopy, 0, 1);
+        return new FixedVectorBuffer(size, valuesCopy, 0, 1);
     }
 
     private int addressOf(int index) {
