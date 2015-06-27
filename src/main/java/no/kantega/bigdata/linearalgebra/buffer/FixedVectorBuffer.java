@@ -57,7 +57,7 @@ public class FixedVectorBuffer implements VectorBuffer {
     public VectorBuffer copy() {
         double[] valuesCopy = new double[size];
         for (int i = 0; i < size; i++) {
-            valuesCopy[i] = get(i);
+            valuesCopy[i] = get(i+1);
         }
         return new FixedVectorBuffer(size, valuesCopy, 0, 1);
     }

@@ -463,7 +463,7 @@ public class Matrix {
     public String toString(Function<Double, String> formatter) {
         requireNonNull(formatter, "formatter can't be null");
         StringBuilder sb = new StringBuilder();
-        rowMajorPositions().forEach(pos -> {
+        rowMajorPositions().forEachOrdered(pos -> {
             sb.append(formatter.apply(elements.get(pos.row(), pos.col())));
             sb.append(pos.col() == size.cols() ? "\n" : " ");
         });
