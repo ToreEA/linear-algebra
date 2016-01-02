@@ -6,7 +6,7 @@
 package no.kantega.bigdata.linearalgebra;
 
 import no.kantega.bigdata.linearalgebra.algorithms.LUDecompositionResult;
-import no.kantega.bigdata.linearalgebra.buffer.FixedMatrixBuffer;
+import no.kantega.bigdata.linearalgebra.buffer.FixedRowMajorMatrixBuffer;
 import no.kantega.bigdata.linearalgebra.buffer.MatrixBuffer;
 import no.kantega.bigdata.linearalgebra.utils.NumberFormatter;
 
@@ -32,7 +32,7 @@ public class Matrix {
     private static final double TINY = 1e-20;
 
     private Size size;
-    private final MatrixBuffer elements;
+    private MatrixBuffer elements;
 
     public static Matrix identity(int rows, int cols) {
         require(() -> rows == cols, "The identity matrix should be a square matrix");
@@ -60,7 +60,7 @@ public class Matrix {
 
     private Matrix(int rows, int cols) {
         this.size = Size.of(rows, cols);
-        this.elements = FixedMatrixBuffer.allocate(rows, cols);
+        this.elements = FixedRowMajorMatrixBuffer.allocate(rows, cols);
     }
 
     private Matrix(MatrixBuffer elements) {
@@ -287,7 +287,7 @@ public class Matrix {
      * - (X^T)^T = X
      */
     public Matrix transpose() {
-        elements.transpose();
+        elements = elements.transpose();
         size = Size.of(size.cols(), size().rows());
         return this;
     }

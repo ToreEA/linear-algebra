@@ -12,31 +12,25 @@ import no.kantega.bigdata.linearalgebra.Size;
  *
  * @author Tore Eide Andersen (Kantega AS)
  */
-public class FixedMatrixBuffer implements MatrixBuffer {
+public class FixedRowMajorMatrixBuffer implements MatrixBuffer {
     private Size size;
     private final double[] values;
-    private final int base;
-    private int rowStride;
-    private int colStride;
+    private int stride;
 
     public static MatrixBuffer allocate(int rows, int cols) {
-        return new FixedMatrixBuffer(rows, cols);
+        return new FixedRowMajorMatrixBuffer(rows, cols);
     }
 
-    private FixedMatrixBuffer(int rows, int cols) {
+    private FixedRowMajorMatrixBuffer(int rows, int cols) {
         this.size = Size.of(rows, cols);
         this.values = new double[rows*cols];
-        this.base = 0;
-        this.rowStride = cols;
-        this.colStride = 1;
+        this.stride = cols;
     }
 
-    private FixedMatrixBuffer(Size size, double[] values, int base, int rowStride, int colStride) {
+    FixedRowMajorMatrixBuffer(Size size, double[] values, int stride) {
         this.size = size;
         this.values = values;
-        this.base = base;
-        this.rowStride = rowStride;
-        this.colStride = colStride;
+        this.stride = stride;
     }
 
     @Override
@@ -51,12 +45,12 @@ public class FixedMatrixBuffer implements MatrixBuffer {
 
     @Override
     public VectorBuffer row(int row) {
-        return FixedVectorBuffer.from(size.cols(), values, (row - 1) * rowStride, colStride);
+        return FixedVectorBuffer.from(size.cols(), values, (row - 1) * stride, 1);
     }
 
     @Override
     public VectorBuffer column(int col) {
-        return FixedVectorBuffer.from(size.rows(), values, (col - 1) * colStride, rowStride);
+        return FixedVectorBuffer.from(size.rows(), values, (col - 1), stride);
     }
 
     @Override
@@ -66,18 +60,15 @@ public class FixedMatrixBuffer implements MatrixBuffer {
 
     @Override
     public MatrixBuffer copy() {
-        return new FixedMatrixBuffer(size, values.clone(), base, rowStride, colStride);
+        return new FixedRowMajorMatrixBuffer(size, values.clone(), stride);
     }
 
     @Override
-    public void transpose() {
-        int tmp = rowStride;
-        rowStride = colStride;
-        colStride = tmp;
-        size = Size.of(size.cols(), size.rows());
+    public MatrixBuffer transpose() {
+        return new FixedColumnMajorMatrixBuffer(Size.of(size.cols(), size.rows()), values, size.cols());
     }
 
     private int addressOf(int row, int col) {
-        return base + (rowStride * (row - 1) + (colStride * (col - 1)));
+        return (stride * (row - 1) + (col - 1));
     }
 }

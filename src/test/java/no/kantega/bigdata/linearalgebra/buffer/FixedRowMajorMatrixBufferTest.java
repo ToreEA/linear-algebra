@@ -1,6 +1,7 @@
 package no.kantega.bigdata.linearalgebra.buffer;
 
 import no.kantega.bigdata.linearalgebra.Size;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -8,18 +9,18 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 /**
- * Unit test for the FixedMatrixBuffer class
+ * Unit test for the FixedRowMajorMatrixBuffer class
  *
  * @author Tore Eide Andersen (Kantega AS)
  */
-public class FixedMatrixBufferTest {
+public class FixedRowMajorMatrixBufferTest {
 
     @Test
     public void shouldReturnSize() {
         final int rows = 3;
         final int cols = 5;
 
-        MatrixBuffer buffer = FixedMatrixBuffer.allocate(rows, cols);
+        MatrixBuffer buffer = FixedRowMajorMatrixBuffer.allocate(rows, cols);
 
         assertThat(buffer.size(), equalTo(Size.of(rows, cols)));
     }
@@ -29,7 +30,7 @@ public class FixedMatrixBufferTest {
         final int rows = 3;
         final int cols = 5;
 
-        MatrixBuffer buffer = FixedMatrixBuffer.allocate(rows, cols);
+        MatrixBuffer buffer = FixedRowMajorMatrixBuffer.allocate(rows, cols);
 
         for (int i = 1; i <= rows; i++) {
             for (int j = 1; j <= cols; j++) {
@@ -44,7 +45,7 @@ public class FixedMatrixBufferTest {
         final int rows = 3;
         final int cols = 5;
 
-        MatrixBuffer buffer = FixedMatrixBuffer.allocate(rows, cols);
+        MatrixBuffer buffer = FixedRowMajorMatrixBuffer.allocate(rows, cols);
         for (int j = 1; j <= cols; j++) {
             buffer.set(2, j, 3.14d);
         }
@@ -61,7 +62,7 @@ public class FixedMatrixBufferTest {
         final int rows = 3;
         final int cols = 5;
 
-        MatrixBuffer buffer = FixedMatrixBuffer.allocate(rows, cols);
+        MatrixBuffer buffer = FixedRowMajorMatrixBuffer.allocate(rows, cols);
         for (int i = 1; i <= rows; i++) {
             buffer.set(i, 3, 3.14d);
         }
@@ -78,7 +79,7 @@ public class FixedMatrixBufferTest {
         final int rows = 3;
         final int cols = 5;
 
-        MatrixBuffer buffer = FixedMatrixBuffer.allocate(rows, cols);
+        MatrixBuffer buffer = FixedRowMajorMatrixBuffer.allocate(rows, cols);
 
         for (int i = 1; i <= rows; i++) {
             for (int j = 1; j <= cols; j++) {
@@ -100,7 +101,7 @@ public class FixedMatrixBufferTest {
         final int rows = 3;
         final int cols = 5;
 
-        MatrixBuffer buffer = FixedMatrixBuffer.allocate(rows, cols);
+        MatrixBuffer buffer = FixedRowMajorMatrixBuffer.allocate(rows, cols);
 
         for (int i = 1; i <= rows; i++) {
             for (int j = 1; j <= cols; j++) {
@@ -108,7 +109,7 @@ public class FixedMatrixBufferTest {
             }
         }
 
-        buffer.transpose();
+        buffer = buffer.transpose();
 
         for (int i = 1; i <= cols; i++) {
             for (int j = 1; j <= rows; j++) {
