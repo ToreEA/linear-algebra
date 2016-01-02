@@ -39,6 +39,11 @@ public class Size {
     }
 
     @Override
+    public String toString() {
+        return rows + " x " + cols;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

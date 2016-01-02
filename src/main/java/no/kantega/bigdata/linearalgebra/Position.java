@@ -41,4 +41,9 @@ public class Position {
     public boolean isBelowDiagonal() {
         return col < row;
     }
+
+    @Override
+    public String toString() {
+        return "row " + row + ", col " + col;
+    }
 }

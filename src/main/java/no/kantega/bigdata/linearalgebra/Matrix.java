@@ -5,6 +5,7 @@
 // ALL RIGHTS RESERVED
 package no.kantega.bigdata.linearalgebra;
 
+import no.kantega.bigdata.linearalgebra.algorithms.LUDecompositionResult;
 import no.kantega.bigdata.linearalgebra.buffer.FixedMatrixBuffer;
 import no.kantega.bigdata.linearalgebra.buffer.MatrixBuffer;
 import no.kantega.bigdata.linearalgebra.utils.NumberFormatter;
@@ -28,6 +29,8 @@ import static no.kantega.bigdata.linearalgebra.utils.StreamUtils.asStream;
  * @author Tore Eide Andersen (Kantega AS)
  */
 public class Matrix {
+    private static final double TINY = 1e-20;
+
     private Size size;
     private final MatrixBuffer elements;
 
@@ -117,6 +120,15 @@ public class Matrix {
     }
 
     /**
+     * An involutory matrix is a matrix that is its own inverse, that is A x A = I.
+     * Involutory matrices are all square roots of the identity matrix.
+     *
+     * @return true if this matrix is involutory
+     */
+    public boolean isInvolutory() {
+        return copy().multiply(this).isIdentity();
+    }
+    /**
      * A square matrix that is not invertible is called singular or degenerate.
      * A square matrix is singular if and only if its determinant is 0.
      */
@@ -124,9 +136,69 @@ public class Matrix {
         return isSquare() && determinant() != 0.0d;
     }
 
-    // 3x3
+    /**
+     * Gets the inverse of this matrix, if it is square and nonsingular.
+     *
+     * Properties of the inverse matrix include:
+     *
+     * 1) A^-1 multiplied with A, gives identity matrix I
+     * 2) (A^−1)^−1 = A
+     * 3) (kA)^−1 = k^−1A^−1 for nonzero scalar k
+     * 4) (A^T)^−1 = (A^−1)^T
+     * 5) det(A^−1) = det(A)^−1
+     *
+     * @return the inverse matrix
+     */
     public Matrix invert() {
-        return null;
+        precondition(this::isSquare, "The inverse can be computed on a square matrix only");
+
+        if (size.rows() == 2 && size.cols() == 2) {
+
+            // Original matrix elements denoted as follows:
+            // a b
+            // c d
+
+            double determinant = elements.get(1, 1) * elements.get(2, 2) - elements.get(1, 2) * elements.get(2, 1); // ad - bc
+
+            Matrix inv = new Matrix(size.rows(), size.cols());
+            inv.elements.set(1, 1, elements.get(2, 2) / determinant);
+            inv.elements.set(1, 2, -elements.get(1, 2) / determinant);
+            inv.elements.set(2, 1, -elements.get(2, 1) / determinant);
+            inv.elements.set(2, 2, elements.get(1, 1) / determinant);
+            return inv;
+        } else if (size.rows() == 3 && size.cols() == 3) {
+
+            // Original matrix elements denoted as follows:
+            // a b c
+            // d e f
+            // g h i
+
+            double A = (elements.get(2,2)*elements.get(3,3) - elements.get(2,3)*elements.get(3,2));  // ei - fh
+            double B = -(elements.get(2,1)*elements.get(3,3) - elements.get(2,3)*elements.get(3,1)); // -(di - fg)
+            double C = (elements.get(2,1)*elements.get(3,2) - elements.get(2,2)*elements.get(3,1));  // dh - eg
+            double D = -(elements.get(1,2)*elements.get(3,3) - elements.get(1,3)*elements.get(3,2)); // -(bi - ch)
+            double E = (elements.get(1,1)*elements.get(3,3) - elements.get(1,3)*elements.get(3,1));  // ai - cg
+            double F = -(elements.get(1,1)*elements.get(3,2) - elements.get(1,2)*elements.get(3,1)); // -(ah - bg)
+            double G = (elements.get(1,2)*elements.get(2,3) - elements.get(1,3)*elements.get(2,2));  // bf - ce
+            double H = -(elements.get(1,1)*elements.get(2,3) - elements.get(1,3)*elements.get(2,1)); // -(af - cd)
+            double I = (elements.get(1,1)*elements.get(2,2) - elements.get(1,2)*elements.get(2,1));  // ae - bd
+
+            double determinant = elements.get(1,1)*A + elements.get(1,2)*B + elements.get(1,3)*C; // aA + bB + cC
+
+            Matrix inv = new Matrix(size.rows(), size.cols());
+            inv.setAt(1,1,A / determinant);
+            inv.setAt(2,1,B / determinant);
+            inv.setAt(3,1,C / determinant);
+            inv.setAt(1,2,D / determinant);
+            inv.setAt(2,2,E / determinant);
+            inv.setAt(3,2,F / determinant);
+            inv.setAt(1,3,G / determinant);
+            inv.setAt(2,3,H / determinant);
+            inv.setAt(3,3,I / determinant);
+            return inv;
+        } else {
+            return luDecomposition().inverse();
+        }
     }
 
     /**
@@ -139,6 +211,7 @@ public class Matrix {
      * is using the LU decomposition, the QR decomposition and others.
      *
      * Basic properties of the derminant are:
+     *
      * 1) det(I) = 1
      * 2) det(A^T) = det(A)
      * 3) det(A^-1) = det(A)^-1
@@ -146,12 +219,21 @@ public class Matrix {
      *
      * Other important properties of the determinant include the following, which are invariant under elementary row
      * and column operations:
+     *
      * 1. Switching two rows or columns changes the sign.
      * 2. Scalars can be factored out from rows and columns.
      * 3. Multiples of rows and columns can be added together without changing the determinant's value.
      * 4. Scalar multiplication of a row by a constant c multiplies the determinant by c.
      * 5. A determinant with a row or column of zeros has value 0.
      * 6. Any determinant with two rows or columns equal has value 0.
+     *
+     * The determinant of a matrix will be zero if
+     *
+     * i) An entire row is zero.
+     * ii) Two rows or columns are equal.
+     * iii) A row or column is a constant multiple of another row or column (linear dependent).
+     *
+     * A matrix is invertible, non-singular, if and only if the determinant is not zero. So, if the determinant is zero, the matrix is singular and does not have an inverse.
      */
     public double determinant() {
         precondition(this::isSquare, "The determinant can be computed on a square matrix only");
@@ -159,31 +241,19 @@ public class Matrix {
         if (size.rows() == 2 && size.cols() == 2) {
             // ad - bc
             return elements.get(1, 1) * elements.get(2, 2)
-                    - elements.get(1, 2) * elements.get(2, 1);
+                 - elements.get(1, 2) * elements.get(2, 1);
         } else if (size.rows() == 3 && size.cols() == 3) {
             // aei - afh - bdi + bfg + cdh -ceg
             return elements.get(1, 1) * elements.get(2, 2) * elements.get(3, 3)
-                    - elements.get(1, 1) * elements.get(2, 3) * elements.get(3, 2)
-                    - elements.get(1, 2) * elements.get(2, 1) * elements.get(3, 3)
-                    + elements.get(1, 2) * elements.get(2, 3) * elements.get(3, 1)
-                    + elements.get(1, 3) * elements.get(2, 1) * elements.get(3, 2)
-                    - elements.get(1, 3) * elements.get(2, 2) * elements.get(3, 1);
+                 - elements.get(1, 1) * elements.get(2, 3) * elements.get(3, 2)
+                 - elements.get(1, 2) * elements.get(2, 1) * elements.get(3, 3)
+                 + elements.get(1, 2) * elements.get(2, 3) * elements.get(3, 1)
+                 + elements.get(1, 3) * elements.get(2, 1) * elements.get(3, 2)
+                 - elements.get(1, 3) * elements.get(2, 2) * elements.get(3, 1);
         } else if (isTriangular()) {
             return diagonalPositions().map(p -> elements.get(p.row(), p.col())).reduce(1.0d, (acc, v) -> acc *= v);
         } else {
-            // In numerical analysis, LU decomposition (where 'LU' stands for 'lower upper', and also called LU factorization)
-            // factors a matrix as the product of a lower triangular matrix and an upper triangular matrix. The product sometimes
-            // includes a permutation matrix as well. The LU decomposition can be viewed as the matrix form of Gaussian elimination.
-            // Computers usually solve square systems of linear equations using the LU decomposition, and it is also a key step when
-            // inverting a matrix, or computing the determinant of a matrix. The LU decomposition was introduced by mathematician
-            // Alan Turing in 1948.
-
-            // This LU decomposition algorithm requires 2n^3/3 operations.
-
-
-
-
-            throw new UnsupportedOperationException("can't compute determinant of a matrix with this size");
+            return luDecomposition().determinant();
         }
     }
 
@@ -210,7 +280,6 @@ public class Matrix {
     }
 
     /**
-     *
      * The transpose reflects the elements of a matrix along the diagonal.
      * Properties of the transpose operation:
      * - (X+Y)^T = X^T + Y^T
@@ -227,6 +296,18 @@ public class Matrix {
         return new Matrix(elements.copy());
     }
 
+
+    /**
+     * Performs matrix multiplication using the naïve O(n^3) algorithm.
+     *
+     * For square matrices whose sizes are powers of two, the Strassen algorithm is much faster than the naïve algorithm. For other cases, it is significantly slower.
+     *
+     * In linear algebra, the Strassen algorithm, named after Volker Strassen, is an algorithm used for matrix multiplication. It is faster than the standard matrix
+     * multiplication algorithm and is useful in practice for large matrices, but would be slower than the fastest known algorithms for extremely large matrices.
+     *
+     * @param other the matrix to be multiplied with
+     * @return the matrix product
+     */
     public Matrix multiply(Matrix other) {
         requireNonNull(other, "other can't be null");
         require(() -> size().cols() == other.size().rows(), "number of columns in first matrix must match number of rows in second matrix");
@@ -322,6 +403,12 @@ public class Matrix {
     }
     */
 
+    /**
+     * To apply a set of this kind of row operation, one might create a scaling matrix S and multiply with the matrix.
+     * @param row
+     * @param constant
+     * @return
+     */
     public Matrix RowOp_multiplyConstant(int row, double constant) {
         requireValidRow(row);
         require(() -> constant != 0.0d, "constant must be nonzero");
@@ -329,6 +416,12 @@ public class Matrix {
         return this;
     }
 
+    /**
+     * To apply a set of this kind of row operation, one might create a permutation matrix P and multiply with the matrix.
+     * @param rowA
+     * @param rowB
+     * @return
+     */
     public Matrix RowOp_swapRows(int rowA, int rowB) {
         requireValidRow(rowA);
         requireValidRow(rowB);
@@ -340,6 +433,13 @@ public class Matrix {
         return this;
     }
 
+    /**
+     * To apply a set of this kind of row operation, one might create an elimination matrix M and multiply with the matrix.
+     * @param row
+     * @param multiple
+     * @param otherRow
+     * @return
+     */
     public Matrix RowOp_addMultipleOfOtherRow(int row, double multiple, int otherRow) {
         requireValidRow(row);
         requireValidRow(otherRow);
@@ -350,6 +450,7 @@ public class Matrix {
 
     /**
      * Gaussian Elimination Method (GEM).
+     *
      * Reduces the matrix to its row echelon form using elementary row operations..
      * Using partial pivoting to reduce numeric instability (accumulated round-off errors due to small pivots).
      * Gaussian elimination with partial pivoting is considered to be one of the most fundamental algorithms
@@ -359,20 +460,8 @@ public class Matrix {
         int minDim = Math.min(size.rows(), size.cols());
         for (int k = 1; k <= minDim; k++) {
 
-            // Find the k-th pivot
-            int iMax = k;
-            double maxAbs = 0.0d;
-            for (int i = k; i <= size.rows(); i++) {
-                double absValue = Math.abs(elements.get(i, k));
-                if (absValue > maxAbs) {
-                    maxAbs = absValue;
-                    iMax = i;
-                }
-            }
-
-            if (elements.get(iMax, k) == 0.0d) {
-                throw new SingularMatrixException();
-            }
+            // Find the pivot for the k'th column
+            int iMax = partialPivotRow(k);
 
             if (k != iMax) {
                 RowOp_swapRows(k, iMax);
@@ -396,7 +485,47 @@ public class Matrix {
     }
 
     /**
+     * The pivot or pivot element is the element of a matrix, or an array, which is selected first by an algorithm (e.g. Gaussian elimination,
+     * simplex algorithm, etc.), to do certain calculations. In the case of matrix algorithms, a pivot entry is usually required to be at least
+     * distinct from zero, and often distant from it; in this case finding this element is called pivoting. Pivoting may be followed by an interchange
+     * of rows or columns to bring the pivot to a fixed position and allow the algorithm to proceed successfully, and possibly to reduce round-off
+     * error. It is often used for verifying row echelon form.
+     *
+     * Pivoting might be thought of as swapping or sorting rows or columns in a matrix, and thus it can be represented as multiplication by
+     * permutation matrices. However, algorithms rarely move the matrix elements because this would cost too much time; instead, they just keep
+     * track of the permutations.
+     *
+     * Overall, pivoting adds more operations to the computational cost of an algorithm. These additional operations are sometimes necessary for the
+     * algorithm to work at all. Other times these additional operations are worthwhile because they add numerical stability to the final result.
+     *
+     * This method finds the row with the largest absolute value looking from the diagonal downwards at specified column. Used in partial pivoting.
+     *
+     * @param k the diagonal element (i.e. column) to find pivot row for
+     * @return the row holding the pivot element. The return value is >= k.
+     * @throws SingularMatrixException when the largest absolute value is close to zero, indicating a singular matrix.
+     */
+    private int partialPivotRow(int k) {
+        int iMax = k;
+        double maxAbs = Math.abs(elements.get(k, k));
+
+        for (int i = k+1; i <= size.rows(); i++) {
+            double absValue = Math.abs(elements.get(i, k));
+            if (absValue > maxAbs) {
+                maxAbs = absValue;
+                iMax = i;
+            }
+        }
+
+        if (maxAbs <= TINY) {
+            throw new SingularMatrixException();
+        }
+
+        return iMax;
+    }
+
+    /**
      * Gauss-Jordan Elimination.
+     *
      * Reduces the matrix to its reduced row echelon form. This form tells whether the linear system has
      * - A unique solution
      * - No solution
@@ -434,26 +563,75 @@ public class Matrix {
         return this;
     }
 
-    public Matrix GramSchmidtProcess() {
+    public Matrix gramSchmidtProcess() {
         return this;
     }
 
     /**
      * In numerical analysis, LU decomposition (where 'LU' stands for 'lower upper', and also called LU factorization)
      * factors a matrix as the product of a lower triangular matrix and an upper triangular matrix. The product sometimes
-     * includes a permutation matrix as well (to avoid numerical instability). The LU decomposition can be viewed as the matrix form of Gaussian elimination.
-     * Computers usually solve square systems of linear equations using the LU decomposition, and it is also a key step when
-     * inverting a matrix, or computing the determinant of a matrix. The LU decomposition was introduced by mathematician
-     * Alan Turing in 1948.
+     * includes a permutation matrix as well (to avoid numerical instability). The LU decomposition can be viewed as the matrix
+     * form of Gaussian elimination. Computers usually solve square systems of linear equations using the LU decomposition, and
+     * it is also a key step when inverting a matrix, or computing the determinant of a matrix. The LU decomposition was
+     * introduced by mathematician Alan Turing in 1948.
      *
-     * This LU decomposition algorithm requires 2n^3/3 operations.
+     * Using the Doolittle algorithm with partial pivoting, producing unit diagonals for the lower triangle. The algorithm below,
+     * however does not store these 1's, since both the L and U matrices are stored within the same physical matrix. The diagonal
+     * of the physical matrix belongs to the U matrix.
+     *
+     * This LU decomposition algorithm requires 2n^3/3 operations for a n x n matrix.
      */
-    /*public LUDecompositionResult LUDecomposition() {
+    public LUDecompositionResult luDecomposition() {
         precondition(this::isSquare, "LU decomposition can be performed on a square matrix only");
 
+        int d = size.rows();
 
-        return this;
-    }*/
+        Matrix LU = copy();
+
+        int[] pi = new int[d];
+        for (int i = 0; i < d; i++) {
+            pi[i] = i;
+        }
+
+        int k0;
+        double signOfDeterminant = 1.0d;
+
+        for (int k=0; k<d; ++k) {
+
+            // find the row with the biggest pivot
+            k0 = LU.partialPivotRow(k+1) - 1;
+
+            if (k != k0) {
+                // switch two rows in permutation matrix
+                int p = pi[k];
+                pi[k] = pi[k0];
+                pi[k0] = p;
+
+                LU.RowOp_swapRows(k+1, k0+1);
+
+                // switching rows means the determinant changes sign
+                signOfDeterminant *= -1;
+            }
+
+            for (int j=k; j<d; ++j) {
+                double sum = 0.0d;
+                for (int p=0; p<k; ++p) {
+                    sum += LU.elements.get(k + 1, p + 1) * LU.elements.get(p + 1, j + 1);
+                }
+                LU.elements.set(k + 1, j + 1, LU.elements.get(k + 1, j + 1) - sum); // not dividing by diagonals
+            }
+
+            for (int i=k+1; i<d; ++i) {
+                double sum=0.0d;
+                for (int p=0; p<k; ++p) {
+                    sum += LU.elements.get(i + 1, p + 1) * LU.elements.get(p + 1, k + 1);
+                }
+                LU.elements.set(i + 1, k + 1, (LU.elements.get(i + 1, k + 1) - sum) / LU.elements.get(k + 1, k + 1));
+            }
+        }
+
+        return new LUDecompositionResult(LU, pi, signOfDeterminant);
+    }
 
     @Override
     public String toString() {

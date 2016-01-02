@@ -85,9 +85,6 @@ public class PositionIterator implements Iterator<Position> {
 
     }
 
-    public static PositionIterator lowerTriangle(Size size) {
-
-    }
 */
     private PositionIterator(Size size, Position first, Position last, Function<Position, Position> advancePosition) {
         this.size = size;
