@@ -31,8 +31,8 @@ public class FixedColumnMajorMatrixBufferTest {
 
         MatrixBuffer buffer = FixedColumnMajorMatrixBuffer.allocate(rows, cols);
 
-        for (int i = 1; i <= rows; i++) {
-            for (int j = 1; j <= cols; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
                 buffer.set(i, j, 3.14d);
                 assertThat(buffer.get(i, j), is(3.14d));
             }
@@ -45,11 +45,11 @@ public class FixedColumnMajorMatrixBufferTest {
         final int cols = 5;
 
         MatrixBuffer buffer = FixedColumnMajorMatrixBuffer.allocate(rows, cols);
-        for (int j = 1; j <= cols; j++) {
-            buffer.set(2, j, 3.14d);
+        for (int j = 0; j < cols; j++) {
+            buffer.set(1, j, 3.14d);
         }
 
-        VectorBuffer row = buffer.row(2);
+        VectorBuffer row = buffer.row(1);
 
         for (int index = 1; index <= cols; index++) {
             assertThat(row.get(index), is(3.14d));
@@ -62,11 +62,11 @@ public class FixedColumnMajorMatrixBufferTest {
         final int cols = 5;
 
         MatrixBuffer buffer = FixedColumnMajorMatrixBuffer.allocate(rows, cols);
-        for (int i = 1; i <= rows; i++) {
-            buffer.set(i, 3, 3.14d);
+        for (int i = 0; i < rows; i++) {
+            buffer.set(i, 2, 3.14d);
         }
 
-        VectorBuffer column = buffer.column(3);
+        VectorBuffer column = buffer.column(2);
 
         for (int index = 1; index <= rows; index++) {
             assertThat(column.get(index), is(3.14d));
@@ -80,16 +80,16 @@ public class FixedColumnMajorMatrixBufferTest {
 
         MatrixBuffer buffer = FixedColumnMajorMatrixBuffer.allocate(rows, cols);
 
-        for (int i = 1; i <= rows; i++) {
-            for (int j = 1; j <= cols; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
                 buffer.set(i, j, i + j/10.0d);
             }
         }
 
         MatrixBuffer copy = buffer.copy();
 
-        for (int i = 1; i <= rows; i++) {
-            for (int j = 1; j <= cols; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
                 assertThat(copy.get(i, j), is(i + j/10.0d));
             }
         }
@@ -102,16 +102,16 @@ public class FixedColumnMajorMatrixBufferTest {
 
         MatrixBuffer buffer = FixedColumnMajorMatrixBuffer.allocate(rows, cols);
 
-        for (int i = 1; i <= rows; i++) {
-            for (int j = 1; j <= cols; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
                 buffer.set(i, j, i + j/10.0d);
             }
         }
 
         buffer = buffer.transpose();
 
-        for (int i = 1; i <= cols; i++) {
-            for (int j = 1; j <= rows; j++) {
+        for (int i = 0; i < cols; i++) {
+            for (int j = 0; j < rows; j++) {
                 assertThat(buffer.get(i, j), is(j + i/10.0d));
             }
         }

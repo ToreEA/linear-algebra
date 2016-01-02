@@ -114,7 +114,7 @@ public class Matrix {
         return isSquare() && !anyMatch((p,v) -> p.isAboveDiagonal() && v != 0.0d);
     }
 
-    // AxAt = I?
+    // AxA^T = I?
     public boolean isOrthogonal() {
         return this.multiply(copy().transpose()).isIdentity();
     }
@@ -158,13 +158,13 @@ public class Matrix {
             // a b
             // c d
 
-            double determinant = elements.get(1, 1) * elements.get(2, 2) - elements.get(1, 2) * elements.get(2, 1); // ad - bc
+            double determinant = elements.get(0, 0) * elements.get(1, 1) - elements.get(0, 1) * elements.get(1, 0); // ad - bc
 
             Matrix inv = new Matrix(size.rows(), size.cols());
-            inv.elements.set(1, 1, elements.get(2, 2) / determinant);
-            inv.elements.set(1, 2, -elements.get(1, 2) / determinant);
-            inv.elements.set(2, 1, -elements.get(2, 1) / determinant);
-            inv.elements.set(2, 2, elements.get(1, 1) / determinant);
+            inv.elements.set(0, 0, elements.get(1, 1) / determinant);
+            inv.elements.set(0, 1, -elements.get(0, 1) / determinant);
+            inv.elements.set(1, 0, -elements.get(1, 0) / determinant);
+            inv.elements.set(1, 1, elements.get(0, 0) / determinant);
             return inv;
         } else if (size.rows() == 3 && size.cols() == 3) {
 
@@ -173,28 +173,28 @@ public class Matrix {
             // d e f
             // g h i
 
-            double A = (elements.get(2,2)*elements.get(3,3) - elements.get(2,3)*elements.get(3,2));  // ei - fh
-            double B = -(elements.get(2,1)*elements.get(3,3) - elements.get(2,3)*elements.get(3,1)); // -(di - fg)
-            double C = (elements.get(2,1)*elements.get(3,2) - elements.get(2,2)*elements.get(3,1));  // dh - eg
-            double D = -(elements.get(1,2)*elements.get(3,3) - elements.get(1,3)*elements.get(3,2)); // -(bi - ch)
-            double E = (elements.get(1,1)*elements.get(3,3) - elements.get(1,3)*elements.get(3,1));  // ai - cg
-            double F = -(elements.get(1,1)*elements.get(3,2) - elements.get(1,2)*elements.get(3,1)); // -(ah - bg)
-            double G = (elements.get(1,2)*elements.get(2,3) - elements.get(1,3)*elements.get(2,2));  // bf - ce
-            double H = -(elements.get(1,1)*elements.get(2,3) - elements.get(1,3)*elements.get(2,1)); // -(af - cd)
-            double I = (elements.get(1,1)*elements.get(2,2) - elements.get(1,2)*elements.get(2,1));  // ae - bd
+            double A = (elements.get(1,1)*elements.get(2,2) - elements.get(1,2)*elements.get(2,1));  // ei - fh
+            double B = -(elements.get(1,0)*elements.get(2,2) - elements.get(1,2)*elements.get(2,0)); // -(di - fg)
+            double C = (elements.get(1,0)*elements.get(2,1) - elements.get(1,1)*elements.get(2,0));  // dh - eg
+            double D = -(elements.get(0,1)*elements.get(2,2) - elements.get(0,2)*elements.get(2,1)); // -(bi - ch)
+            double E = (elements.get(0,0)*elements.get(2,2) - elements.get(0,2)*elements.get(2,0));  // ai - cg
+            double F = -(elements.get(0,0)*elements.get(2,1) - elements.get(0,1)*elements.get(2,0)); // -(ah - bg)
+            double G = (elements.get(0,1)*elements.get(1,2) - elements.get(0,2)*elements.get(1,1));  // bf - ce
+            double H = -(elements.get(0,0)*elements.get(1,2) - elements.get(0,2)*elements.get(1,0)); // -(af - cd)
+            double I = (elements.get(0,0)*elements.get(1,1) - elements.get(0,1)*elements.get(1,0));  // ae - bd
 
-            double determinant = elements.get(1,1)*A + elements.get(1,2)*B + elements.get(1,3)*C; // aA + bB + cC
+            double determinant = elements.get(0,0)*A + elements.get(0,1)*B + elements.get(0,2)*C; // aA + bB + cC
 
             Matrix inv = new Matrix(size.rows(), size.cols());
-            inv.setAt(1,1,A / determinant);
-            inv.setAt(2,1,B / determinant);
-            inv.setAt(3,1,C / determinant);
-            inv.setAt(1,2,D / determinant);
-            inv.setAt(2,2,E / determinant);
-            inv.setAt(3,2,F / determinant);
-            inv.setAt(1,3,G / determinant);
-            inv.setAt(2,3,H / determinant);
-            inv.setAt(3,3,I / determinant);
+            inv.elements.set(0,0,A / determinant);
+            inv.elements.set(1,0,B / determinant);
+            inv.elements.set(2,0,C / determinant);
+            inv.elements.set(0,1,D / determinant);
+            inv.elements.set(1,1,E / determinant);
+            inv.elements.set(2,1,F / determinant);
+            inv.elements.set(0,2,G / determinant);
+            inv.elements.set(1,2,H / determinant);
+            inv.elements.set(2,2,I / determinant);
             return inv;
         } else {
             return luDecomposition().inverse();
@@ -240,18 +240,18 @@ public class Matrix {
 
         if (size.rows() == 2 && size.cols() == 2) {
             // ad - bc
-            return elements.get(1, 1) * elements.get(2, 2)
-                 - elements.get(1, 2) * elements.get(2, 1);
+            return elements.get(0, 0) * elements.get(1, 1)
+                 - elements.get(0, 1) * elements.get(1, 0);
         } else if (size.rows() == 3 && size.cols() == 3) {
             // aei - afh - bdi + bfg + cdh -ceg
-            return elements.get(1, 1) * elements.get(2, 2) * elements.get(3, 3)
-                 - elements.get(1, 1) * elements.get(2, 3) * elements.get(3, 2)
-                 - elements.get(1, 2) * elements.get(2, 1) * elements.get(3, 3)
-                 + elements.get(1, 2) * elements.get(2, 3) * elements.get(3, 1)
-                 + elements.get(1, 3) * elements.get(2, 1) * elements.get(3, 2)
-                 - elements.get(1, 3) * elements.get(2, 2) * elements.get(3, 1);
+            return elements.get(0, 0) * elements.get(1, 1) * elements.get(2, 2)
+                 - elements.get(0, 0) * elements.get(1, 2) * elements.get(2, 1)
+                 - elements.get(0, 1) * elements.get(1, 0) * elements.get(2, 2)
+                 + elements.get(0, 1) * elements.get(1, 2) * elements.get(2, 0)
+                 + elements.get(0, 2) * elements.get(1, 0) * elements.get(2, 1)
+                 - elements.get(0, 2) * elements.get(1, 1) * elements.get(2, 0);
         } else if (isTriangular()) {
-            return diagonalPositions().map(p -> elements.get(p.row(), p.col())).reduce(1.0d, (acc, v) -> acc *= v);
+            return diagonalPositions().map(p -> elements.get(p.row()-1, p.col()-1)).reduce(1.0d, (acc, v) -> acc *= v);
         } else {
             return luDecomposition().determinant();
         }
@@ -259,20 +259,26 @@ public class Matrix {
 
     public double at(Position pos) {
         requireNonNull(pos, "pos can't be null");
-        return at(pos.row(), pos.col());
+        requireValidRow(pos.row());
+        requireValidColumn(pos.col());
+        return elements.get(pos.row()-1, pos.col()-1);
     }
 
     public double at(int row, int col) {
-        return elements.get(requireValidRow(row), requireValidColumn(col));
+        return elements.get(requireValidRow(row)-1, requireValidColumn(col)-1);
     }
 
     public void setAt(Position pos, double value) {
         requireNonNull(pos, "pos can't be null");
-        setAt(pos.row(), pos.col(), value);
+        requireValidRow(pos.row());
+        requireValidColumn(pos.col());
+        elements.set(pos.row()-1, pos.col()-1, value);
     }
 
     public void setAt(int row, int col, double value) {
-        elements.set(requireValidRow(row), requireValidColumn(col), value);
+        requireValidRow(row);
+        requireValidColumn(col);
+        elements.set(row-1, col-1, value);
     }
 
     public Matrix populate(Supplier<Double> valueSupplier) {
@@ -329,24 +335,24 @@ public class Matrix {
     public Matrix add(Matrix other) {
         requireNonNull(other, "other can't be null");
         require(() -> size().equals(other.size()), "can't add a matrix of different size");
-        transform((p,v) -> v + other.elements.get(p.row(), p.col()));
+        transform((p,v) -> v + other.elements.get(p.row()-1, p.col()-1));
         return this;
     }
 
     public Matrix transform(BiFunction<Position, Double, Double> func) {
         requireNonNull(func, "func can't be null");
-        rowMajorPositions().forEach(pos -> elements.set(pos.row(), pos.col(), func.apply(pos, elements.get(pos.row(), pos.col()))));
+        rowMajorPositions().forEach(pos -> elements.set(pos.row()-1, pos.col()-1, func.apply(pos, elements.get(pos.row()-1, pos.col()-1))));
         return this;
     }
 
     public void forEach(BiConsumer<Position, Double> consumer) {
         requireNonNull(consumer, "consumer can't be null");
-        rowMajorPositions().forEach(pos -> consumer.accept(pos, elements.get(pos.row(), pos.col())));
+        rowMajorPositions().forEach(pos -> consumer.accept(pos, elements.get(pos.row()-1, pos.col()-1)));
     }
 
     public boolean anyMatch(BiPredicate<Position, Double> predicate) {
         requireNonNull(predicate, "predicate can't be null");
-        return rowMajorPositions().anyMatch(pos -> predicate.test(pos, elements.get(pos.row(), pos.col())));
+        return rowMajorPositions().anyMatch(pos -> predicate.test(pos, elements.get(pos.row()-1, pos.col()-1)));
     }
 
     public IntStream rowIndices() {
@@ -390,11 +396,11 @@ public class Matrix {
     }
 
     public Vector rowVector(int row) {
-        return Vector.from(elements.row(requireValidRow(row)));
+        return Vector.from(elements.row(requireValidRow(row)-1));
     }
 
     public Vector columnVector(int col) {
-        return Vector.from(elements.column(requireValidColumn(col)));
+        return Vector.from(elements.column(requireValidColumn(col)-1));
     }
 
     /*
@@ -412,7 +418,7 @@ public class Matrix {
     public Matrix RowOp_multiplyConstant(int row, double constant) {
         requireValidRow(row);
         require(() -> constant != 0.0d, "constant must be nonzero");
-        columnIndices().forEach(j -> elements.set(row, j, constant * elements.get(row, j)));
+        columnIndices().forEach(j -> elements.set(row-1, j-1, constant * elements.get(row-1, j-1)));
         return this;
     }
 
@@ -426,9 +432,9 @@ public class Matrix {
         requireValidRow(rowA);
         requireValidRow(rowB);
         columnIndices().forEach(j -> {
-            double tmp = elements.get(rowA, j);
-            elements.set(rowA, j, elements.get(rowB, j));
-            elements.set(rowB, j, tmp);
+            double tmp = elements.get(rowA-1, j-1);
+            elements.set(rowA-1, j-1, elements.get(rowB-1, j-1));
+            elements.set(rowB-1, j-1, tmp);
         });
         return this;
     }
@@ -444,7 +450,7 @@ public class Matrix {
         requireValidRow(row);
         requireValidRow(otherRow);
         require(() -> row != otherRow, "can't add multiple of the same row");
-        columnIndices().forEach(j -> elements.set(row, j, elements.get(row, j) + multiple * elements.get(otherRow, j)));
+        columnIndices().forEach(j -> elements.set(row-1, j-1, elements.get(row-1, j-1) + multiple * elements.get(otherRow-1, j-1)));
         return this;
     }
 
@@ -458,23 +464,23 @@ public class Matrix {
      */
     public Matrix gaussianElimination() {
         int minDim = Math.min(size.rows(), size.cols());
-        for (int k = 1; k <= minDim; k++) {
+        for (int k = 0; k < minDim; k++) {
 
             // Find the pivot for the k'th column
             int iMax = partialPivotRow(k);
 
             if (k != iMax) {
-                RowOp_swapRows(k, iMax);
+                RowOp_swapRows(k+1, iMax+1);
             }
 
             // Do for all rows below pivot
-            for (int i = k + 1; i <= size.rows(); i++) {
+            for (int i = k + 1; i < size.rows(); i++) {
                 double multiplier = elements.get(i, k) / elements.get(k, k);
 
                 // Do for all remaining elements in current row
                 // The code below is an optimized version of RowOp_addMultipleOfOtherRow(i, -multiplier, k);
 
-                for (int j = k + 1; j <= size.cols(); j++) {
+                for (int j = k + 1; j < size.cols(); j++) {
                     elements.set(i, j, elements.get(i, j) - elements.get(k, j) * multiplier);
                 }
                 // Fill lower triangular matrix with zeros
@@ -500,15 +506,15 @@ public class Matrix {
      *
      * This method finds the row with the largest absolute value looking from the diagonal downwards at specified column. Used in partial pivoting.
      *
-     * @param k the diagonal element (i.e. column) to find pivot row for
-     * @return the row holding the pivot element. The return value is >= k.
+     * @param k the diagonal element (i.e. column) to find pivot row for (zero-based)
+     * @return the row (zero-based) holding the pivot element. The return value is >= k.
      * @throws SingularMatrixException when the largest absolute value is close to zero, indicating a singular matrix.
      */
     private int partialPivotRow(int k) {
         int iMax = k;
         double maxAbs = Math.abs(elements.get(k, k));
 
-        for (int i = k+1; i <= size.rows(); i++) {
+        for (int i = k; i < size.rows(); i++) {
             double absValue = Math.abs(elements.get(i, k));
             if (absValue > maxAbs) {
                 maxAbs = absValue;
@@ -537,12 +543,12 @@ public class Matrix {
         gaussianElimination();
 
         int minDim = Math.min(size.rows(), size.cols());
-        for (int k = 1; k <= minDim; k++) {
+        for (int k = 0; k < minDim; k++) {
             // Make all pivots 1
             if (elements.get(k, k) != 1.0d) {
                 // RowOp_multiplyConstant:
                 double multiplier = 1 / elements.get(k, k);
-                for (int j = k + 1; j <= size.cols(); j++) {
+                for (int j = k + 1; j < size.cols(); j++) {
                     elements.set(k, j, elements.get(k , j) * multiplier);
                 }
                 elements.set(k, k, 1.0d);
@@ -550,11 +556,11 @@ public class Matrix {
 
         }
 
-        for (int k = minDim; k > 1; k--) {
+        for (int k = minDim-1; k > 0; k--) {
             // Cancel out (make zero) rest of the column
-            for (int i = k - 1; i >= 1; i--) {
+            for (int i = k - 1; i >= 0; i--) {
                 double multiplier = elements.get(i, k);
-                for (int j = k + 1; j <= size.cols(); j++) {
+                for (int j = k + 1; j < size.cols(); j++) {
                     elements.set(i, j, elements.get(i, j) - multiplier * elements.get(k, j));
                 }
                 elements.set(i, k, 0.0d);
@@ -563,6 +569,7 @@ public class Matrix {
         return this;
     }
 
+    // TODO
     public Matrix gramSchmidtProcess() {
         return this;
     }
@@ -599,7 +606,7 @@ public class Matrix {
         for (int k=0; k<d; ++k) {
 
             // find the row with the biggest pivot
-            k0 = LU.partialPivotRow(k+1) - 1;
+            k0 = LU.partialPivotRow(k);
 
             if (k != k0) {
                 // switch two rows in permutation matrix
@@ -616,17 +623,17 @@ public class Matrix {
             for (int j=k; j<d; ++j) {
                 double sum = 0.0d;
                 for (int p=0; p<k; ++p) {
-                    sum += LU.elements.get(k + 1, p + 1) * LU.elements.get(p + 1, j + 1);
+                    sum += LU.elements.get(k, p) * LU.elements.get(p, j);
                 }
-                LU.elements.set(k + 1, j + 1, LU.elements.get(k + 1, j + 1) - sum); // not dividing by diagonals
+                LU.elements.set(k, j, LU.elements.get(k, j) - sum); // not dividing by diagonals
             }
 
             for (int i=k+1; i<d; ++i) {
                 double sum=0.0d;
                 for (int p=0; p<k; ++p) {
-                    sum += LU.elements.get(i + 1, p + 1) * LU.elements.get(p + 1, k + 1);
+                    sum += LU.elements.get(i, p) * LU.elements.get(p, k);
                 }
-                LU.elements.set(i + 1, k + 1, (LU.elements.get(i + 1, k + 1) - sum) / LU.elements.get(k + 1, k + 1));
+                LU.elements.set(i, k, (LU.elements.get(i, k) - sum) / LU.elements.get(k, k));
             }
         }
 
@@ -642,7 +649,7 @@ public class Matrix {
         requireNonNull(formatter, "formatter can't be null");
         StringBuilder sb = new StringBuilder();
         rowMajorPositions().forEachOrdered(pos -> {
-            sb.append(formatter.apply(elements.get(pos.row(), pos.col())));
+            sb.append(formatter.apply(elements.get(pos.row()-1, pos.col()-1)));
             sb.append(pos.col() == size.cols() ? "\n" : " ");
         });
         return sb.toString();
@@ -655,7 +662,7 @@ public class Matrix {
 
         Matrix other = (Matrix) o;
 
-        return size.equals(other.size()) && !anyMatch((p,v) -> v != other.elements.get(p.row(), p.col()));
+        return size.equals(other.size()) && !anyMatch((p,v) -> v != other.elements.get(p.row()-1, p.col()-1));
     }
 
     private int requireValidRow(int row) {
