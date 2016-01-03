@@ -47,7 +47,7 @@ public class Matrix {
         requireNonNull(values, "values can't be null");
         require(() -> rows * cols == values.length, "values array must contain exactly %d x %d elements", rows, cols);
 
-        return new Matrix(rows, cols).transform((p, v) -> values[(p.row() - 1) * cols + (p.col() - 1)]);
+        return new Matrix(rows, cols).transform((p, v) -> values[p.row() * cols + p.col()]);
     }
 
     public static Matrix constant(int rows, int cols, double value) {
@@ -128,6 +128,7 @@ public class Matrix {
     public boolean isInvolutory() {
         return copy().multiply(this).isIdentity();
     }
+
     /**
      * A square matrix that is not invertible is called singular or degenerate.
      * A square matrix is singular if and only if its determinant is 0.
@@ -251,7 +252,7 @@ public class Matrix {
                  + elements.get(0, 2) * elements.get(1, 0) * elements.get(2, 1)
                  - elements.get(0, 2) * elements.get(1, 1) * elements.get(2, 0);
         } else if (isTriangular()) {
-            return diagonalPositions().map(p -> elements.get(p.row()-1, p.col()-1)).reduce(1.0d, (acc, v) -> acc *= v);
+            return diagonalPositions().map(p -> elements.get(p.row(), p.col())).reduce(1.0d, (acc, v) -> acc *= v);
         } else {
             return luDecomposition().determinant();
         }
@@ -259,9 +260,7 @@ public class Matrix {
 
     public double at(Position pos) {
         requireNonNull(pos, "pos can't be null");
-        requireValidRow(pos.row());
-        requireValidColumn(pos.col());
-        return elements.get(pos.row()-1, pos.col()-1);
+        return elements.get(pos.row(), pos.col());
     }
 
     public double at(int row, int col) {
@@ -272,7 +271,7 @@ public class Matrix {
         requireNonNull(pos, "pos can't be null");
         requireValidRow(pos.row());
         requireValidColumn(pos.col());
-        elements.set(pos.row()-1, pos.col()-1, value);
+        elements.set(pos.row(), pos.col(), value);
     }
 
     public void setAt(int row, int col, double value) {
@@ -320,8 +319,8 @@ public class Matrix {
 
         Matrix result = new Matrix(this.size().rows(), other.size().cols());
         result.transform((p, v) -> {
-            Vector rowVectorA = this.rowVector(p.row());
-            Vector colVectorB = other.columnVector(p.col());
+            Vector rowVectorA = this.rowVector(p.row()+1);
+            Vector colVectorB = other.columnVector(p.col()+1);
             return rowVectorA.innerProduct(colVectorB);
         });
 
@@ -347,32 +346,32 @@ public class Matrix {
     public Matrix add(Matrix other) {
         requireNonNull(other, "other can't be null");
         require(() -> size().equals(other.size()), "can't add a matrix of different size");
-        transform((p,v) -> v + other.elements.get(p.row()-1, p.col()-1));
+        transform((p,v) -> v + other.elements.get(p.row(), p.col()));
         return this;
     }
 
     public Matrix transform(BiFunction<Position, Double, Double> func) {
         requireNonNull(func, "func can't be null");
-        rowMajorPositions().forEach(pos -> elements.set(pos.row()-1, pos.col()-1, func.apply(pos, elements.get(pos.row()-1, pos.col()-1))));
+        rowMajorPositions().forEach(pos -> elements.set(pos.row(), pos.col(), func.apply(pos, elements.get(pos.row(), pos.col()))));
         return this;
     }
 
     public void forEach(BiConsumer<Position, Double> consumer) {
         requireNonNull(consumer, "consumer can't be null");
-        rowMajorPositions().forEach(pos -> consumer.accept(pos, elements.get(pos.row()-1, pos.col()-1)));
+        rowMajorPositions().forEach(pos -> consumer.accept(pos, elements.get(pos.row(), pos.col())));
     }
 
     public boolean anyMatch(BiPredicate<Position, Double> predicate) {
         requireNonNull(predicate, "predicate can't be null");
-        return rowMajorPositions().anyMatch(pos -> predicate.test(pos, elements.get(pos.row()-1, pos.col()-1)));
+        return rowMajorPositions().anyMatch(pos -> predicate.test(pos, elements.get(pos.row(), pos.col())));
     }
 
-    public IntStream rowIndices() {
-        return IntStream.rangeClosed(1, size.rows()).parallel();
+    private IntStream rowIndices() {
+        return IntStream.rangeClosed(0, size.rows()-1).parallel();
     }
 
-    public IntStream columnIndices() {
-        return IntStream.rangeClosed(1, size.cols()).parallel();
+    private IntStream columnIndices() {
+        return IntStream.rangeClosed(0, size.cols()-1).parallel();
     }
 
     public Stream<Position> rowMajorPositions() {
@@ -429,7 +428,7 @@ public class Matrix {
      */
     Matrix rowOp_multiplyConstant(int row, double constant) {
         require(() -> constant != 0.0d, "constant must be nonzero");
-        columnIndices().forEach(j -> elements.set(row, j-1, constant * elements.get(row, j-1)));
+        columnIndices().forEach(j -> elements.set(row, j, constant * elements.get(row, j)));
         return this;
     }
 
@@ -441,9 +440,9 @@ public class Matrix {
      */
     Matrix rowOp_swapRows(int rowA, int rowB) {
         columnIndices().forEach(j -> {
-            double tmp = elements.get(rowA, j-1);
-            elements.set(rowA, j-1, elements.get(rowB, j-1));
-            elements.set(rowB, j-1, tmp);
+            double tmp = elements.get(rowA, j);
+            elements.set(rowA, j, elements.get(rowB, j));
+            elements.set(rowB, j, tmp);
         });
         return this;
     }
@@ -457,7 +456,7 @@ public class Matrix {
      */
     Matrix rowOp_addMultipleOfOtherRow(int row, double multiple, int otherRow) {
         require(() -> row != otherRow, "can't add multiple of the same row");
-        columnIndices().forEach(j -> elements.set(row, j-1, elements.get(row, j-1) + multiple * elements.get(otherRow, j-1)));
+        columnIndices().forEach(j -> elements.set(row, j, elements.get(row, j) + multiple * elements.get(otherRow, j)));
         return this;
     }
 
@@ -656,8 +655,8 @@ public class Matrix {
         requireNonNull(formatter, "formatter can't be null");
         StringBuilder sb = new StringBuilder();
         rowMajorPositions().forEachOrdered(pos -> {
-            sb.append(formatter.apply(elements.get(pos.row()-1, pos.col()-1)));
-            sb.append(pos.col() == size.cols() ? "\n" : " ");
+            sb.append(formatter.apply(elements.get(pos.row(), pos.col())));
+            sb.append(pos.isLastColumn() ? "\n" : " ");
         });
         return sb.toString();
     }
@@ -669,7 +668,7 @@ public class Matrix {
 
         Matrix other = (Matrix) o;
 
-        return size.equals(other.size()) && !anyMatch((p,v) -> v != other.elements.get(p.row()-1, p.col()-1));
+        return size.equals(other.size()) && !anyMatch((p,v) -> v != other.elements.get(p.row(), p.col()));
     }
 
     private int requireValidRow(int row) {

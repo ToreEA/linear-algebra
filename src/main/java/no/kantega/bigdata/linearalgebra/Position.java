@@ -12,12 +12,14 @@ package no.kantega.bigdata.linearalgebra;
  */
 public class Position {
     private final int row, col;
+    private Size size;
 
-    public static Position of(int row, int col) {
-        return new Position(row, col);
+    public static Position of(Size size, int row, int col) {
+        return new Position(size, row, col);
     }
 
-    private Position(int row, int col) {
+    private Position(Size size, int row, int col) {
+        this.size = size;
         this.row = row;
         this.col = col;
     }
@@ -28,6 +30,14 @@ public class Position {
 
     public int col() {
         return col;
+    }
+
+    public boolean isLastRow() {
+        return row == size.rows()-1;
+    }
+
+    public boolean isLastColumn() {
+        return col == size.cols()-1;
     }
 
     public boolean isOnDiagonal() {

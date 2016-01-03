@@ -20,63 +20,63 @@ public class PositionIterator implements Iterator<Position> {
     private Position currentPos;
 
     public static PositionIterator rowMajor(Size size) {
-        return new PositionIterator(size, Position.of(1,1), Position.of(size.rows(), size.cols()), p -> {
+        return new PositionIterator(size, Position.of(size, 0,0), Position.of(size, size.rows()-1, size.cols()-1), p -> {
             int nextRow = p.row();
             int nextCol = p.col() + 1;
-            if (nextCol > size.cols()) {
+            if (nextCol == size.cols()) {
                 nextRow++;
-                nextCol = 1;
+                nextCol = 0;
             }
-            return Position.of(nextRow, nextCol);
+            return Position.of(size, nextRow, nextCol);
         });
     }
 
     public static PositionIterator columnMajor(Size size) {
-        return new PositionIterator(size, Position.of(1,1), Position.of(size.rows(), size.cols()), p -> {
+        return new PositionIterator(size, Position.of(size, 0,0), Position.of(size, size.rows()-1, size.cols()-1), p -> {
             int nextCol = p.col();
             int nextRow = p.row() + 1;
-            if (nextRow > size.rows()) {
+            if (nextRow == size.rows()) {
                 nextCol++;
-                nextRow = 1;
+                nextRow = 0;
             }
-            return Position.of(nextRow, nextCol);
+            return Position.of(size, nextRow, nextCol);
         });
     }
 
     public static PositionIterator rowVector(Size size, int row) {
-        return new PositionIterator(size, Position.of(row,1), Position.of(row,size.cols()), p -> {
+        return new PositionIterator(size, Position.of(size, row, 0), Position.of(size, row, size.cols()-1), p -> {
             int nextRow = p.row();
             int nextCol = p.col() + 1;
-            return Position.of(nextRow, nextCol);
+            return Position.of(size, nextRow, nextCol);
         });
     }
 
     public static PositionIterator colVector(Size size, int col) {
-        return new PositionIterator(size, Position.of(1,col), Position.of(size.rows(),col), p -> {
+        return new PositionIterator(size, Position.of(size, 0,col), Position.of(size, size.rows()-1,col), p -> {
             int nextCol = p.col();
             int nextRow = p.row() + 1;
-            return Position.of(nextRow, nextCol);
+            return Position.of(size, nextRow, nextCol);
         });
     }
 
     public static PositionIterator diagonal(Size size) {
-        return new PositionIterator(size, Position.of(1,1), Position.of(size.rows(),size.cols()), p -> {
+        return new PositionIterator(size, Position.of(size, 0,0), Position.of(size, size.rows()-1,size.cols()-1), p -> {
             int nextCol = p.col() + 1;
             int nextRow = p.row() + 1;
-            return Position.of(nextRow, nextCol);
+            return Position.of(size, nextRow, nextCol);
         });
 
     }
 
     public static PositionIterator lowerTriangle(Size size) {
-        return new PositionIterator(size, Position.of(2,1), Position.of(size.rows(),size.cols()-1), p -> {
+        return new PositionIterator(size, Position.of(size, 1,0), Position.of(size, size.rows()-1,size.cols()-2), p -> {
             int nextRow = p.row();
             int nextCol = p.col() + 1;
             if (nextCol == p.row()) {
-                nextCol = 1;
+                nextCol = 0;
                 nextRow++;
             }
-            return Position.of(nextRow, nextCol);
+            return Position.of(size, nextRow, nextCol);
         });
     }
 
