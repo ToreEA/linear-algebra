@@ -306,7 +306,7 @@ public class Matrix {
     /**
      * Performs matrix multiplication using the naïve O(n^3) algorithm.
      *
-     * For square matrices whose sizes are powers of two, the Strassen algorithm is much faster than the naïve algorithm. For other cases, it is significantly slower.
+     * For square matrices whose sizes are powers of two, the Strassen algorithm is much faster (O(n^2.8)) than the naïve algorithm. For other cases, it is significantly slower.
      *
      * In linear algebra, the Strassen algorithm, named after Volker Strassen, is an algorithm used for matrix multiplication. It is faster than the standard matrix
      * multiplication algorithm and is useful in practice for large matrices, but would be slower than the fastest known algorithms for extremely large matrices.
@@ -324,6 +324,18 @@ public class Matrix {
             Vector colVectorB = other.columnVector(p.col());
             return rowVectorA.innerProduct(colVectorB);
         });
+
+        // The following code is 30% slower than code above
+        /*for (int i=0; i<size.rows(); ++i) {
+            for (int j=0; j<other.size().cols(); ++j) {
+                double innerProduct = 0.0d;
+                for (int k=0; k<size.cols(); ++k) {
+                    innerProduct += elements.get(i, k) * other.elements.get(k, j);
+                }
+                result.elements.set(i, j, innerProduct);
+            }
+        }*/
+
         return result;
     }
 
@@ -411,46 +423,41 @@ public class Matrix {
 
     /**
      * To apply a set of this kind of row operation, one might create a scaling matrix S and multiply with the matrix.
-     * @param row
+     * @param row the row number (zero-based)
      * @param constant
      * @return
      */
-    public Matrix RowOp_multiplyConstant(int row, double constant) {
-        requireValidRow(row);
+    Matrix rowOp_multiplyConstant(int row, double constant) {
         require(() -> constant != 0.0d, "constant must be nonzero");
-        columnIndices().forEach(j -> elements.set(row-1, j-1, constant * elements.get(row-1, j-1)));
+        columnIndices().forEach(j -> elements.set(row, j-1, constant * elements.get(row, j-1)));
         return this;
     }
 
     /**
      * To apply a set of this kind of row operation, one might create a permutation matrix P and multiply with the matrix.
-     * @param rowA
-     * @param rowB
+     * @param rowA the first row number (zero-based)
+     * @param rowB the second row number (zero-based)
      * @return
      */
-    public Matrix RowOp_swapRows(int rowA, int rowB) {
-        requireValidRow(rowA);
-        requireValidRow(rowB);
+    Matrix rowOp_swapRows(int rowA, int rowB) {
         columnIndices().forEach(j -> {
-            double tmp = elements.get(rowA-1, j-1);
-            elements.set(rowA-1, j-1, elements.get(rowB-1, j-1));
-            elements.set(rowB-1, j-1, tmp);
+            double tmp = elements.get(rowA, j-1);
+            elements.set(rowA, j-1, elements.get(rowB, j-1));
+            elements.set(rowB, j-1, tmp);
         });
         return this;
     }
 
     /**
      * To apply a set of this kind of row operation, one might create an elimination matrix M and multiply with the matrix.
-     * @param row
+     * @param row the row number (zero-based)
      * @param multiple
-     * @param otherRow
+     * @param otherRow the row number (zero-based) of other row
      * @return
      */
-    public Matrix RowOp_addMultipleOfOtherRow(int row, double multiple, int otherRow) {
-        requireValidRow(row);
-        requireValidRow(otherRow);
+    Matrix rowOp_addMultipleOfOtherRow(int row, double multiple, int otherRow) {
         require(() -> row != otherRow, "can't add multiple of the same row");
-        columnIndices().forEach(j -> elements.set(row-1, j-1, elements.get(row-1, j-1) + multiple * elements.get(otherRow-1, j-1)));
+        columnIndices().forEach(j -> elements.set(row, j-1, elements.get(row, j-1) + multiple * elements.get(otherRow, j-1)));
         return this;
     }
 
@@ -470,7 +477,7 @@ public class Matrix {
             int iMax = partialPivotRow(k);
 
             if (k != iMax) {
-                RowOp_swapRows(k+1, iMax+1);
+                rowOp_swapRows(k, iMax);
             }
 
             // Do for all rows below pivot
@@ -478,7 +485,7 @@ public class Matrix {
                 double multiplier = elements.get(i, k) / elements.get(k, k);
 
                 // Do for all remaining elements in current row
-                // The code below is an optimized version of RowOp_addMultipleOfOtherRow(i, -multiplier, k);
+                // The code below is an optimized version of rowOp_addMultipleOfOtherRow(i, -multiplier, k);
 
                 for (int j = k + 1; j < size.cols(); j++) {
                     elements.set(i, j, elements.get(i, j) - elements.get(k, j) * multiplier);
@@ -546,7 +553,7 @@ public class Matrix {
         for (int k = 0; k < minDim; k++) {
             // Make all pivots 1
             if (elements.get(k, k) != 1.0d) {
-                // RowOp_multiplyConstant:
+                // rowOp_multiplyConstant:
                 double multiplier = 1 / elements.get(k, k);
                 for (int j = k + 1; j < size.cols(); j++) {
                     elements.set(k, j, elements.get(k , j) * multiplier);
@@ -614,7 +621,7 @@ public class Matrix {
                 pi[k] = pi[k0];
                 pi[k0] = p;
 
-                LU.RowOp_swapRows(k+1, k0+1);
+                LU.rowOp_swapRows(k, k0);
 
                 // switching rows means the determinant changes sign
                 signOfDeterminant *= -1;

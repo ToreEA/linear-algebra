@@ -85,19 +85,19 @@ public class MatrixTest {
 
     @Test
     public void shouldPerformRowOpMultiplyConstant() {
-        Matrix m = Matrix.fromRowMajorSequence(3, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9).RowOp_multiplyConstant(2, 2);
+        Matrix m = Matrix.fromRowMajorSequence(3, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9).rowOp_multiplyConstant(1, 2);
         assertEqualToNoDecimals(m, "1 2 3\n8 10 12\n7 8 9\n");
     }
 
     @Test
     public void shouldPerformRowOpSwapRows() {
-        Matrix m = Matrix.fromRowMajorSequence(3, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9).RowOp_swapRows(1, 3);
+        Matrix m = Matrix.fromRowMajorSequence(3, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9).rowOp_swapRows(0, 2);
         assertEqualToNoDecimals(m, "7 8 9\n4 5 6\n1 2 3\n");
     }
 
     @Test
     public void shouldPerformRowOpAddMultipleOfOtherRow() {
-        Matrix m = Matrix.fromRowMajorSequence(3, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9).RowOp_addMultipleOfOtherRow(1, 2, 3);
+        Matrix m = Matrix.fromRowMajorSequence(3, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9).rowOp_addMultipleOfOtherRow(0, 2, 2);
         assertEqualToNoDecimals(m, "15 18 21\n4 5 6\n7 8 9\n");
     }
 
