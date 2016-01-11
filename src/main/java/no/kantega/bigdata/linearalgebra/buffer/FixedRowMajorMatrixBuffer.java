@@ -1,14 +1,9 @@
-// This software is produced by Statens vegvesen. Unauthorized redistribution,
-// reproduction or usage of this software in whole or in part without the
-// express written consent of Statens vegvesen is strictly prohibited.
-// Copyright © 2015 Statens vegvesen
-// ALL RIGHTS RESERVED
 package no.kantega.bigdata.linearalgebra.buffer;
 
 import no.kantega.bigdata.linearalgebra.Size;
 
 /**
- * Implements a matrix buffer of fixed size
+ * Implements a matrix buffer of fixed size storing elements row wise
  *
  * @author Tore Eide Andersen (Kantega AS)
  */

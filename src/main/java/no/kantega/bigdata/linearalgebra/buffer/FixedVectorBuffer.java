@@ -1,8 +1,3 @@
-// This software is produced by Statens vegvesen. Unauthorized redistribution,
-// reproduction or usage of this software in whole or in part without the
-// express written consent of Statens vegvesen is strictly prohibited.
-// Copyright © 2015 Statens vegvesen
-// ALL RIGHTS RESERVED
 package no.kantega.bigdata.linearalgebra.buffer;
 
 /**
@@ -57,12 +52,12 @@ public class FixedVectorBuffer implements VectorBuffer {
     public VectorBuffer copy() {
         double[] valuesCopy = new double[size];
         for (int i = 0; i < size; i++) {
-            valuesCopy[i] = get(i+1);
+            valuesCopy[i] = get(i);
         }
         return new FixedVectorBuffer(size, valuesCopy, 0, 1);
     }
 
     private int addressOf(int index) {
-        return base + (stride * (index - 1));
+        return base + (stride * index);
     }
 }

@@ -1,7 +1,6 @@
 package no.kantega.bigdata.linearalgebra.buffer;
 
 import no.kantega.bigdata.linearalgebra.Size;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -52,7 +51,7 @@ public class FixedRowMajorMatrixBufferTest {
 
         VectorBuffer row = buffer.row(1);
 
-        for (int index = 1; index <= cols; index++) {
+        for (int index = 0; index < cols; index++) {
             assertThat(row.get(index), is(3.14d));
         }
     }
@@ -69,7 +68,7 @@ public class FixedRowMajorMatrixBufferTest {
 
         VectorBuffer column = buffer.column(2);
 
-        for (int index = 1; index <= rows; index++) {
+        for (int index = 0; index < rows; index++) {
             assertThat(column.get(index), is(3.14d));
         }
     }

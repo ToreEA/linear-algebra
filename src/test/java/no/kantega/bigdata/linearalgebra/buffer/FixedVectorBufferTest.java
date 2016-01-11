@@ -16,7 +16,7 @@ public class FixedVectorBufferTest {
     public void shouldGetSameAsSet() {
         final int size = 5;
         VectorBuffer buffer = FixedVectorBuffer.allocate(size);
-        for (int index = 1; index <= size; index++) {
+        for (int index = 0; index < size; index++) {
             buffer.set(index, 3.14d);
             assertThat(buffer.get(index), is(3.14d));
         }

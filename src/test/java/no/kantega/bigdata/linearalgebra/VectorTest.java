@@ -2,6 +2,8 @@ package no.kantega.bigdata.linearalgebra;
 
 import org.junit.Test;
 
+import java.util.stream.IntStream;
+
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -175,6 +177,6 @@ public class VectorTest {
 
     private void assertEqual(Vector v1, Vector v2, double epsilon) {
         assertThat(v1.dimension(), is(v2.dimension()));
-        v1.indices().forEachOrdered(i -> assertThat("Component " + i, v1.at(i), closeTo(v2.at(i), epsilon)));
+        IntStream.rangeClosed(1, v1.dimension()).forEachOrdered(i -> assertThat("Component " + i, v1.at(i), closeTo(v2.at(i), epsilon)));
     }
 }

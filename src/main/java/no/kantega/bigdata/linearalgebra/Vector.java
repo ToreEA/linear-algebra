@@ -1,8 +1,3 @@
-// This software is produced by Statens vegvesen. Unauthorized redistribution,
-// reproduction or usage of this software in whole or in part without the
-// express written consent of Statens vegvesen is strictly prohibited.
-// Copyright © 2015 Statens vegvesen
-// ALL RIGHTS RESERVED
 package no.kantega.bigdata.linearalgebra;
 
 import no.kantega.bigdata.linearalgebra.buffer.FixedVectorBuffer;
@@ -11,8 +6,8 @@ import no.kantega.bigdata.linearalgebra.utils.NumberFormatter;
 
 import java.util.List;
 import java.util.function.*;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static no.kantega.bigdata.linearalgebra.utils.Assert.require;
@@ -28,7 +23,7 @@ public class Vector {
 
     public static Vector of(double... values) {
         requireNonNull(values, "values can't be null");
-        return new Vector(values.length).transform((i,v) -> values[i-1]);
+        return new Vector(values.length).transform((i,v) -> values[i]);
     }
 
     public static Vector ofDimension(int dimension) {
@@ -68,25 +63,25 @@ public class Vector {
     public double at(int index) {
         requireValidIndex(index);
 
-        return components.get(index);
+        return components.get(index-1);
     }
 
     public void setAt(int index, double value) {
         requireValidIndex(index);
 
-        components.set(index, value);
+        components.set(index-1, value);
     }
 
-    public Vector populate(Supplier<Double> valueSupplier) {
-        return transform((i, v) -> valueSupplier.get());
+    public Vector populate(DoubleSupplier valueSupplier) {
+        return transform((i, v) -> valueSupplier.getAsDouble());
     }
 
-    public IntStream indices() {
-        return IntStream.rangeClosed(1, dimension).parallel();
+    private IntStream indices() {
+        return IntStream.rangeClosed(0, dimension-1).parallel();
     }
 
-    public Stream<Double> components() {
-        return indices().boxed().map(components::get);
+    public DoubleStream components() {
+        return indices().mapToDouble(components::get);
     }
 
     public Vector copy() {
@@ -138,8 +133,8 @@ public class Vector {
         requireNonNull(other, "other can't be null");
         require(() -> other.dimension() == this.dimension(), "can't get inner product for vectors of different dimension");
 
-        return indices().boxed()
-                .map(i -> components.get(i) * other.components.get(i))
+        return indices()
+                .mapToDouble(i -> components.get(i) * other.components.get(i))
                 .reduce(0.0d, Double::sum);
     }
 
@@ -163,7 +158,9 @@ public class Vector {
         require(() -> other.dimension() == this.dimension(), "can't get inner product for vectors of different dimension");
         require(() -> this.dimension() == 3, "can compute cross product for three dimensional vectors only");
 
-        return Vector.of(at(2)*other.at(3) - at(3)*other.at(2), at(3)*other.at(1) - at(1)*other.at(3), at(1)*other.at(2) - at(2)*other.at(1));
+        return Vector.of(components.get(1)*other.components.get(2) - components.get(2)*other.components.get(1),
+                         components.get(2)*other.components.get(0) - components.get(0)*other.components.get(2),
+                         components.get(0)*other.components.get(1) - components.get(1)*other.components.get(0));
     }
 
     /**
@@ -270,11 +267,11 @@ public class Vector {
         require(() -> vectors.stream().map(Vector::dimension).distinct().count() == 1, "can't orthonormalize vectors with different dimensions");
 
         int k = vectors.size();
-        for (int i = 1; i <= k; i++) {
-            Vector vi = vectors.get(i-1).normalize();
-            for (int j = i + 1; j <= k; j++) {
+        for (int i = 0; i < k; i++) {
+            Vector vi = vectors.get(i).normalize();
+            for (int j = i + 1; j < k; j++) {
                 // Remove component in direction vi from vj
-                Vector vj = vectors.get(j - 1);
+                Vector vj = vectors.get(j);
                 vj.subtract(vj.projectOnto(vi));
             }
         }
@@ -283,7 +280,7 @@ public class Vector {
     /**
      * Gram-Schmidt Orthogonalization
      *
-     * Same as the MGS ortonormalization, but without the normalization step.
+     * Same as the MGS orthonormalization, but without the normalization step.
      */
     public static void orthogonalize(List<Vector> vectors) {
         requireNonNull(vectors, "vectors can't be null");
@@ -291,11 +288,11 @@ public class Vector {
         require(() -> vectors.stream().map(Vector::dimension).distinct().count() == 1, "can't orthogonalize vectors with different dimensions");
 
         int k = vectors.size();
-        for (int i = 1; i <= k; i++) {
-            Vector vi = vectors.get(i - 1);
-            for (int j = i + 1; j <= k; j++) {
+        for (int i = 0; i < k; i++) {
+            Vector vi = vectors.get(i);
+            for (int j = i + 1; j < k; j++) {
                 // Remove component in direction vi from each vj
-                Vector vj = vectors.get(j - 1);
+                Vector vj = vectors.get(j);
                 vj.subtract(vj.projectOnto(vi));
             }
         }

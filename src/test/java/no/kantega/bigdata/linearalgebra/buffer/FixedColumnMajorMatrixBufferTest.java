@@ -51,7 +51,7 @@ public class FixedColumnMajorMatrixBufferTest {
 
         VectorBuffer row = buffer.row(1);
 
-        for (int index = 1; index <= cols; index++) {
+        for (int index = 0; index < cols; index++) {
             assertThat(row.get(index), is(3.14d));
         }
     }
@@ -68,7 +68,7 @@ public class FixedColumnMajorMatrixBufferTest {
 
         VectorBuffer column = buffer.column(2);
 
-        for (int index = 1; index <= rows; index++) {
+        for (int index = 0; index < rows; index++) {
             assertThat(column.get(index), is(3.14d));
         }
     }

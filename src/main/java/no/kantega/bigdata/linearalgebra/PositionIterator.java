@@ -1,8 +1,3 @@
-// This software is produced by Statens vegvesen. Unauthorized redistribution,
-// reproduction or usage of this software in whole or in part without the
-// express written consent of Statens vegvesen is strictly prohibited.
-// Copyright © 2015 Statens vegvesen
-// ALL RIGHTS RESERVED
 package no.kantega.bigdata.linearalgebra;
 
 import java.util.Iterator;
@@ -14,80 +9,82 @@ import java.util.function.Function;
  * @author Tore Eide Andersen (Kantega AS)
  */
 public class PositionIterator implements Iterator<Position> {
-    private final Size size;
+
     private final Function<Position, Position> advancePosition;
     private final Position lastPos;
     private Position currentPos;
 
     public static PositionIterator rowMajor(Size size) {
-        return new PositionIterator(size, Position.of(size, 0,0), Position.of(size, size.rows()-1, size.cols()-1), p -> {
-            int nextRow = p.row();
-            int nextCol = p.col() + 1;
-            if (nextCol == size.cols()) {
-                nextRow++;
-                nextCol = 0;
+        return new PositionIterator(Position.of(size, 0,0), Position.of(size, size.rows()-1, size.cols()-1), p -> {
+            if (p.isLastColumn()) {
+                p.row++;
+                p.col = 0;
+            } else {
+                p.col++;
             }
-            return Position.of(size, nextRow, nextCol);
+
+            return p;
         });
     }
 
     public static PositionIterator columnMajor(Size size) {
-        return new PositionIterator(size, Position.of(size, 0,0), Position.of(size, size.rows()-1, size.cols()-1), p -> {
-            int nextCol = p.col();
-            int nextRow = p.row() + 1;
-            if (nextRow == size.rows()) {
-                nextCol++;
-                nextRow = 0;
+        return new PositionIterator(Position.of(size, 0,0), Position.of(size, size.rows()-1, size.cols()-1), p -> {
+            if (p.isLastRow()) {
+                p.col++;
+                p.row = 0;
+            } else {
+                p.row++;
             }
-            return Position.of(size, nextRow, nextCol);
+
+            return p;
         });
     }
 
     public static PositionIterator rowVector(Size size, int row) {
-        return new PositionIterator(size, Position.of(size, row, 0), Position.of(size, row, size.cols()-1), p -> {
-            int nextRow = p.row();
-            int nextCol = p.col() + 1;
-            return Position.of(size, nextRow, nextCol);
+        return new PositionIterator(Position.of(size, row, 0), Position.of(size, row, size.cols()-1), p -> {
+            p.col++;
+            return p;
         });
     }
 
     public static PositionIterator colVector(Size size, int col) {
-        return new PositionIterator(size, Position.of(size, 0,col), Position.of(size, size.rows()-1,col), p -> {
-            int nextCol = p.col();
-            int nextRow = p.row() + 1;
-            return Position.of(size, nextRow, nextCol);
+        return new PositionIterator(Position.of(size, 0,col), Position.of(size, size.rows()-1,col), p -> {
+            p.row++;
+            return p;
         });
     }
 
     public static PositionIterator diagonal(Size size) {
-        return new PositionIterator(size, Position.of(size, 0,0), Position.of(size, size.rows()-1,size.cols()-1), p -> {
-            int nextCol = p.col() + 1;
-            int nextRow = p.row() + 1;
-            return Position.of(size, nextRow, nextCol);
+        return new PositionIterator(Position.of(size, 0,0), Position.of(size, size.rows()-1,size.cols()-1), p -> {
+            p.row++;
+            p.col++;
+            return p;
         });
-
     }
 
     public static PositionIterator lowerTriangle(Size size) {
-        return new PositionIterator(size, Position.of(size, 1,0), Position.of(size, size.rows()-1,size.cols()-2), p -> {
-            int nextRow = p.row();
-            int nextCol = p.col() + 1;
-            if (nextCol == p.row()) {
-                nextCol = 0;
-                nextRow++;
+        return new PositionIterator(Position.of(size, 1,0), Position.of(size, size.rows()-1,size.cols()-2), p -> {
+            p.col++;
+            if (p.col == p.row) {
+                p.col = 0;
+                p.row++;
             }
-            return Position.of(size, nextRow, nextCol);
+            return p;
         });
     }
 
-/*
     public static PositionIterator upperTriangle(Size size) {
-
+        return new PositionIterator(Position.of(size, 0,1), Position.of(size, size.rows()-2,size.cols()-1), p -> {
+            p.row++;
+            if (p.col == p.row) {
+                p.row = 0;
+                p.col++;
+            }
+            return p;
+        });
     }
 
-*/
-    private PositionIterator(Size size, Position first, Position last, Function<Position, Position> advancePosition) {
-        this.size = size;
+    private PositionIterator(Position first, Position last, Function<Position, Position> advancePosition) {
         this.advancePosition = advancePosition;
         this.currentPos = first;
         this.lastPos = last;
@@ -95,12 +92,12 @@ public class PositionIterator implements Iterator<Position> {
 
     @Override
     public boolean hasNext() {
-        return currentPos.row() <= lastPos.row() && currentPos.col() <= lastPos.col();
+        return currentPos.row <= lastPos.row && currentPos.col <= lastPos.col;
     }
 
     @Override
     public Position next() {
-        Position pos = currentPos;
+        Position pos = new Position(currentPos);
         currentPos = advancePosition.apply(currentPos);
         return pos;
     }

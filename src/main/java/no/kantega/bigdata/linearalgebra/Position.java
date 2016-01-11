@@ -1,27 +1,30 @@
-// This software is produced by Statens vegvesen. Unauthorized redistribution,
-// reproduction or usage of this software in whole or in part without the
-// express written consent of Statens vegvesen is strictly prohibited.
-// Copyright © 2015 Statens vegvesen
-// ALL RIGHTS RESERVED
 package no.kantega.bigdata.linearalgebra;
 
 /**
- * Represents the position of a matrix element
+ * Represents the row and column position of a matrix element
  *
  * @author Tore Eide Andersen (Kantega AS)
  */
 public class Position {
-    private final int row, col;
-    private Size size;
+    int lastRow, lastCol;
+    int row, col;
 
     public static Position of(Size size, int row, int col) {
         return new Position(size, row, col);
     }
 
     private Position(Size size, int row, int col) {
-        this.size = size;
+        this.lastRow = size.rows() - 1;
+        this.lastCol = size.cols() - 1;
         this.row = row;
         this.col = col;
+    }
+
+    public Position(Position that) {
+        this.lastRow = that.lastRow;
+        this.lastCol = that.lastCol;
+        this.row = that.row;
+        this.col = that.col;
     }
 
     public int row() {
@@ -33,11 +36,11 @@ public class Position {
     }
 
     public boolean isLastRow() {
-        return row == size.rows()-1;
+        return row == lastRow;
     }
 
     public boolean isLastColumn() {
-        return col == size.cols()-1;
+        return col == lastCol;
     }
 
     public boolean isOnDiagonal() {

@@ -1,8 +1,3 @@
-// This software is produced by Statens vegvesen. Unauthorized redistribution,
-// reproduction or usage of this software in whole or in part without the
-// express written consent of Statens vegvesen is strictly prohibited.
-// Copyright © 2015 Statens vegvesen
-// ALL RIGHTS RESERVED
 package no.kantega.bigdata.linearalgebra;
 
 import no.kantega.bigdata.linearalgebra.algorithms.LUDecompositionResult;
@@ -55,7 +50,8 @@ public class Matrix {
     }
 
     public static Matrix random(int rows, int cols, double minValue, double maxValue) {
-        return new Matrix(rows, cols).populate(() -> minValue + Math.random() * (maxValue - minValue));
+        double diff = maxValue - minValue;
+        return new Matrix(rows, cols).populate(() -> minValue + Math.random() * diff);
     }
 
     private Matrix(int rows, int cols) {
@@ -116,7 +112,9 @@ public class Matrix {
 
     // AxA^T = I?
     public boolean isOrthogonal() {
-        return this.multiply(copy().transpose()).isIdentity();
+        // Use same buffer for both original matrix and the transposed matrix
+        Matrix transposedMatrix = new Matrix(elements.transpose());
+        return this.multiply(transposedMatrix).isIdentity();
     }
 
     /**
@@ -126,7 +124,7 @@ public class Matrix {
      * @return true if this matrix is involutory
      */
     public boolean isInvolutory() {
-        return copy().multiply(this).isIdentity();
+        return multiply(this).isIdentity();
     }
 
     /**
@@ -414,12 +412,6 @@ public class Matrix {
         return Vector.from(elements.column(requireValidColumn(col)-1));
     }
 
-    /*
-    public Matrix doElementaryelRowOp(ElementaryRowOperation op) {
-
-    }
-    */
-
     /**
      * To apply a set of this kind of row operation, one might create a scaling matrix S and multiply with the matrix.
      * @param row the row number (zero-based)
@@ -553,13 +545,12 @@ public class Matrix {
             // Make all pivots 1
             if (elements.get(k, k) != 1.0d) {
                 // rowOp_multiplyConstant:
-                double multiplier = 1 / elements.get(k, k);
+                double divisor = elements.get(k, k);
                 for (int j = k + 1; j < size.cols(); j++) {
-                    elements.set(k, j, elements.get(k , j) * multiplier);
+                    elements.set(k, j, elements.get(k , j) / divisor);
                 }
                 elements.set(k, k, 1.0d);
             }
-
         }
 
         for (int k = minDim-1; k > 0; k--) {
