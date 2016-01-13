@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
  */
 public class MatrixTest {
 
-    public static final double EPSILON = 0.000000000001;
+    private static final double EPSILON = 0.000000000001;
 
     @Test
     public void shouldCreateRandomMatrix() {
@@ -130,7 +130,7 @@ public class MatrixTest {
 
     @Test
     public void shouldSolveLinearEquationsUsingLUD() {
-        // System of 3 linear equations with 4 unknowns
+        // System of 3 linear equations with 3 unknowns
         Matrix a1 = Matrix.fromRowMajorSequence(3, 3, 1,2,4, 3,8,14, 2,6,13);
         LUDecompositionResult lud1 = a1.luDecomposition();
 
@@ -215,16 +215,8 @@ public class MatrixTest {
     }
 
     private void assertLUDecomposition(String message, LUDecompositionResult lud, Matrix a, double detA) {
-        //print("A : ", a);
-
-        //print("L : ", lud.getL());
-        //print("U : ", lud.getU());
-
         Matrix lu = lud.lowerMatrix().multiply(lud.getU());
-        //print("LU : ", lu);
-
         Matrix pa = lud.permutationMatrix().multiply(a);
-        //print("PA : ", pa);
 
         assertThat(message, pa, closeToMatrix(lu, EPSILON));
         assertThat(message, lud.determinant(), closeTo(detA, EPSILON));
