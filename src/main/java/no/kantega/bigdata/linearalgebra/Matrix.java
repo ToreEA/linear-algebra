@@ -29,9 +29,15 @@ public class Matrix {
     private Size size;
     private MatrixBuffer elements;
 
-    public static Matrix identity(int rows, int cols) {
-        require(() -> rows == cols, "The identity matrix should be a square matrix");
-        return new Matrix(rows, cols).transform((p, v) -> p.isOnDiagonal() ? 1.0d : 0.0d);
+    /**
+     * Creates the identity matrix of specified size
+     *
+     * @param size the size (number of rows/columns) of the matrix
+     * @return a new matrix
+     */
+    public static Matrix identity(int size) {
+        require(() -> size > 0, "size must be greater than 0");
+        return new Matrix(size, size).transform((p, v) -> p.isOnDiagonal() ? 1.0d : 0.0d);
     }
 
     public static Matrix zero(int rows, int cols) {

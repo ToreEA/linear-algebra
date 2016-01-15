@@ -35,7 +35,7 @@ public class MatrixTest {
 
     @Test
     public void shouldCreateUnitMatrix() {
-        Matrix m = Matrix.identity(3, 3);
+        Matrix m = Matrix.identity(3);
         assertEqualToNoDecimals(m, "1 0 0\n0 1 0\n0 0 1\n");
     }
 
@@ -211,7 +211,7 @@ public class MatrixTest {
     private void assertInverseMatrix(String message, Matrix m) {
         Matrix inv = m.invert();
         Matrix pr = m.multiply(inv);
-        assertThat(message, pr, closeToMatrix(Matrix.identity(m.size().rows(), m.size().cols()), EPSILON));
+        assertThat(message, pr, closeToMatrix(Matrix.identity(m.size().rows()), EPSILON));
     }
 
     private void assertLUDecomposition(String message, LUDecompositionResult lud, Matrix a, double detA) {
