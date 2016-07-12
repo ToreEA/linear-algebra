@@ -36,7 +36,7 @@ public class VectorTest {
 
     @Test
     public void shouldCreateWithSpecifiedDimension() {
-        Vector v = Vector.ofDimension(3);
+        Vector v = Vector.newInstance(3);
         v.setAt(1, 5.0d);
         v.setAt(2, 6.0d);
         v.setAt(3, 7.0d);
@@ -89,7 +89,7 @@ public class VectorTest {
 
     @Test
     public void shouldReturnDimension() {
-        Vector v = Vector.ofDimension(4);
+        Vector v = Vector.newInstance(4);
 
         assertThat(v.dimension(), is(4));
     }
@@ -213,10 +213,19 @@ public class VectorTest {
     }
 
     @Test
-    public void shouldProjectOrthogonally() {
+    public void shouldProjectOrthogonallyOnNonZeroVector() {
         Vector v = Vector.of(1, 1, 4);
         Vector u = Vector.of(1, 2, -1);
         Vector p = Vector.of(-1.0/6.0, -1.0/3.0, 1.0/6.0);
+
+        assertThat(v.projectOnto(u), equalTo(p));
+    }
+
+    @Test
+    public void shouldProjectOrthogonallyOnZeroVector() {
+        Vector v = Vector.of(1, 1, 4);
+        Vector u = Vector.zero(3);
+        Vector p = Vector.zero(3);
 
         assertThat(v.projectOnto(u), equalTo(p));
     }

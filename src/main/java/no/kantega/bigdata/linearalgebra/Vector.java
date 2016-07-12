@@ -4,6 +4,7 @@ import no.kantega.bigdata.linearalgebra.buffer.FixedVectorBuffer;
 import no.kantega.bigdata.linearalgebra.buffer.VectorBuffer;
 import no.kantega.bigdata.linearalgebra.utils.NumberFormatter;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.*;
 import java.util.stream.DoubleStream;
@@ -38,7 +39,7 @@ public class Vector {
      * @param dimension the vector dimension
      * @return a new vector
      */
-    public static Vector ofDimension(int dimension) {
+    public static Vector newInstance(int dimension) {
         return new Vector(dimension);
     }
 
@@ -199,21 +200,21 @@ public class Vector {
     /**
      * Multiplies with specified scalar value
      *
-     * @param value the value to multiply with
+     * @param scalar the scalar to multiply with
      * @return this vector after multiplication
      */
-    public Vector multiply(double value) {
-        return transform((i, v) -> v * value);
+    public Vector multiply(double scalar) {
+        return transform((i, v) -> v * scalar);
     }
 
     /**
      * Divides by specified scalar value
      *
-     * @param value the value to divide by
+     * @param scalar the scalar to divide by
      * @return this vector after division
      */
-    public Vector divide(double value) {
-        return transform((i, v) -> v / value);
+    public Vector divide(double scalar) {
+        return transform((i, v) -> v / scalar);
     }
 
     /**
@@ -349,7 +350,7 @@ public class Vector {
     }
 
     /**
-     * Modified the component values using the specfied bi-function
+     * Modifies the component values using the specfied bi-function
      *
      * @param func the function transforming component values
      * @return this vector after transformation
@@ -364,7 +365,6 @@ public class Vector {
      * Iterates over the component values, invoking specified consumer
      *
      * @param consumer the consumer to invoke on each component value
-     * @return this vector
      */
     public Vector forEach(BiConsumer<Integer, Double> consumer) {
         requireNonNull(consumer, "consumer can't be null");

@@ -30,9 +30,20 @@ public class Matrix {
     private MatrixBuffer elements;
 
     /**
-     * Creates the identity matrix of specified size
+     * Creates a non-populated matrix of specified size
      *
-     * @param size the size (number of rows/columns) of the matrix
+     * @param rows the number of rows
+     * @param cols the number of columns
+     * @return a new matrix
+     */
+    public static Matrix newInstance(int rows, int cols) {
+        return new Matrix(rows, cols);
+    }
+
+    /**
+     * Creates the identity matrix (aka unit matrix) of specified size
+     *
+     * @param size the number of rows and columns in the matrix
      * @return a new matrix
      */
     public static Matrix identity(int size) {
@@ -40,10 +51,25 @@ public class Matrix {
         return new Matrix(size, size).transform((p, v) -> p.isOnDiagonal() ? 1.0d : 0.0d);
     }
 
+    /**
+     * Creates a matrix of specified size populated with zero values
+     *
+     * @param rows the number of rows
+     * @param cols the number of columns
+     * @return a new matrix
+     */
     public static Matrix zero(int rows, int cols) {
         return constant(rows, cols, 0.0d);
     }
 
+    /**
+     * Creates a matrix with specified size and values
+     *
+     * @param rows the number of rows
+     * @param cols the number of columns
+     * @param values the values to populate matrix with
+     * @return a new matrix
+     */
     public static Matrix fromRowMajorSequence(int rows, int cols, double... values) {
         requireNonNull(values, "values can't be null");
         require(() -> rows * cols == values.length, "values array must contain exactly %d x %d elements", rows, cols);
@@ -51,98 +77,234 @@ public class Matrix {
         return new Matrix(rows, cols).transform((p, v) -> values[p.row() * cols + p.col()]);
     }
 
+    /**
+     * Creates a matrix with specified size and sets all elements to specified value
+     *
+     * @param rows the number of rows
+     * @param cols the number of columns
+     * @param value the constant value
+     * @return a new matrix
+     */
     public static Matrix constant(int rows, int cols, double value) {
         return new Matrix(rows, cols).populate(() -> value);
     }
 
+    /**
+     * Creates a matrix of specified size and populates with random values within specified range
+     *
+     * @param rows the number of rows
+     * @param cols the number of columns
+     * @param minValue the lower bound of element values
+     * @param maxValue the upper bound of element values
+     * @return a new matrix
+     */
     public static Matrix random(int rows, int cols, double minValue, double maxValue) {
         double diff = maxValue - minValue;
         return new Matrix(rows, cols).populate(() -> minValue + Math.random() * diff);
     }
 
+    /**
+     * Creates a matrix using specified buffer
+     *
+     * @param buffer the buffer to consume
+     * @return a new matrix
+     */
+    public static Matrix from(MatrixBuffer buffer) {
+        return new Matrix(buffer);
+    }
+
+    /**
+     * Creates a new matrix of specified size
+     *
+     * @param rows the number of rows
+     * @param cols the number of columns
+     */
     private Matrix(int rows, int cols) {
         this.size = Size.of(rows, cols);
         this.elements = FixedRowMajorMatrixBuffer.allocate(rows, cols);
     }
 
-    private Matrix(MatrixBuffer elements) {
-        requireNonNull(elements, "elements can't be null");
-        this.size = elements.size();
-        this.elements = elements;
+    /**
+     * Creates a new matrix consuming specified buffer
+     *
+     * @param buffer the buffer to consume
+     */
+    private Matrix(MatrixBuffer buffer) {
+        requireNonNull(buffer, "buffer can't be null");
+        this.size = buffer.size();
+        this.elements = buffer;
     }
 
+    /**
+     * Gets the matrix size
+     *
+     * @return the matrix size
+     */
     public Size size() {
         return size;
     }
 
+    /**
+     * Gets the matrix rank.
+     *
+     * The rank of a matrix is the number of non all-zeros rows after reducing to reduced echelon form.
+     *
+     * The rank of a matrix A is the dimension of the vector space generated (or spanned) by its columns.
+     * This is the same as the dimension of the space spanned by its rows. It is a measure of the "nondegenerateness"
+     * of the system of linear equations and linear transformation encoded by A. There are multiple equivalent
+     * definitions of rank. A matrix's rank is one of its most fundamental characteristics.
+     *
+     * A square matrix that is nonsingular (determinant != 0) has full-rank, a n x n matrix has rank n.
+     *
+     * If a matrix A is not full rank, one of the columns is fully explained by the others, in the sense that it is a
+     * linear combination of the others. A trivial example is when a column is duplicated. This can also happen if you
+     * have 0-1 variables and a column consists of only 0 or only 1. In that case, the rank of the matrix A is less than
+     * n and A^TxA has no inverse.
+     *
+     * @return the matrix rank
+     */
+    public int rank() {
+        // TODO: Reduce matrix to row echelon form +
+        // Reduce matrix to reduced row echelon form
+        return 0;
+    }
+
+    /**
+     * Get the matrix trace.
+     *
+     * The trace of a matrix is the sum of its diagonal elements (a11 + a22 + .. + ann).
+     *
+     * @return the matrix trace
+     */
+    public double trace() {
+        // TODO
+        return 0.0d;
+    }
+
+    /**
+     * Gets whether this matrix is square, i.e. has the same number of rows and columns
+     *
+     * @return true if this is a square matrix; else false
+     */
     public boolean isSquare() {
         return size().rows() == size().cols();
     }
 
+    /**
+     * Gets whether this matrix is an identity, aka unit, matrix.
+     * An identity matrix is a square matrix having ones along the diagonal, and zeros in the other positions.
+     *
+     * @return true if this is an identity matrix; else false
+     */
     public boolean isIdentity() {
         return isSquare() && !anyMatch((p,v) -> p.isOnDiagonal() ? v != 1.0d : v != 0.0d);
     }
 
     /**
-     * A zero matrix is a matrix with all of its entries equal to zero.
+     * Gets whether this matrix is a zero matrix.
+     * A zero matrix is a matrix with all of its elements equal to zero.
+     *
+     * @return true if this is a zero matrix; else false
      */
     public boolean isZero() {
         return !anyMatch((p,v) -> v != 0.0d);
     }
 
     /**
-     * A diagonal matrix is a symmetric matrix with all of its entries equal to zero except may be the ones on the diagonal.
+     * Gets whether this matrix is diagonal.
+     * A diagonal matrix is a square matrix with all of its elements equal to zero except may be the ones on the diagonal.
+     *
+     * @return true if this is a diagonal matrix; else false
      */
     public boolean isDiagonal() {
         return isSquare() && !anyMatch((p,v) -> p.isOnDiagonal() ? v == 0.0d : v != 0.0d);
     }
 
     /**
+     * Gets whether this matrix is symmetrical.
      * A symmetrical matrix is identical to its transpose. Thus, only square matrices can be symmetrical.
+     *
+     * @return true if this matrix is a symmetrical matrix; else false
      */
     public boolean isSymmetrical() {
         return isSquare() && !lowerTriangularPositions().anyMatch((p) -> elements.get(p.row(), p.col()) != elements.get(p.col(), p.row()));
     }
 
+    /**
+     * Gets whether this matrix is triangular.
+     * A triangular matrix has all zero elements below or above the diagonal. Only square matrices can be triangular.
+     *
+     * @return true if this matrix is triangular; else false
+     */
     public boolean isTriangular() {
         return isUpperTriangular() || isLowerTriangular();
     }
 
+    /**
+     * Gets whether this matrix is upper triangular.
+     * An upper triangular matrix has all zero elements below the diagonal. Only square matrices can be upper triangular.
+     *
+     * @return true if this matrix is upper triangular; else false
+     */
     public boolean isUpperTriangular() {
         return isSquare() && !anyMatch((p,v) -> p.isBelowDiagonal() && v != 0.0d);
     }
 
+    /**
+     * Gets whether this matrix is lower triangular.
+     * An upper triangular matrix has all zero elements above the diagonal. Only square matrices can be lower triangular.
+     *
+     * @return true if this matrix is lower triangular; else false
+     */
     public boolean isLowerTriangular() {
         return isSquare() && !anyMatch((p,v) -> p.isAboveDiagonal() && v != 0.0d);
     }
 
-    // AxA^T = I?
+    /**
+     * Gets whether this matrix is orthogonal.
+     * An orthogonal matrix is a square matrix with elements whose columns and rows are orthogonal unit vectors (i.e., orthonormal vectors).
+     * A matrix is orthogonal if the product of the matrix and its transpose equals the identity matrix, that is A x A^T = I
+     * This in turn means that its transposed is equal to its inverse, that is A^T = A^-1, and that the matrix is invertible.
+     * The determinant of an orthogonal matrix is either +1 or -1.
+     *
+     * @return true if this matrix is orthogonal; else false
+     */
     public boolean isOrthogonal() {
-        // Use same buffer for both original matrix and the transposed matrix
-        Matrix transposedMatrix = new Matrix(elements.transpose());
-        return this.multiply(transposedMatrix).isIdentity();
+        // Using same buffer for both original matrix and the transposed to save memory
+        Matrix transposed = new Matrix(elements.transpose());
+        return this.multiply(transposed).isIdentity();
     }
 
     /**
+     * Gets whether this matrix is involutory.
      * An involutory matrix is a matrix that is its own inverse, that is A x A = I.
      * Involutory matrices are all square roots of the identity matrix.
      *
-     * @return true if this matrix is involutory
+     * @return true if this matrix is involutory; else false
      */
     public boolean isInvolutory() {
         return multiply(this).isIdentity();
     }
 
     /**
+     * Gets whether this matrix is invertible.
+     * A matrix is invertible if it is square and its determinant is non-zero.
+     *
      * A square matrix that is not invertible is called singular or degenerate.
+     * When a matrix representing a system of linear equations is singular it means it
+     * does not have a single solution. It either has no solutions at all, or infinitely number
+     * of solutions.
+     *
      * A square matrix is singular if and only if its determinant is 0.
+     *
+     * @return true if this matrix is invertible; else false
      */
     public boolean isInvertable() {
         return isSquare() && determinant() != 0.0d;
     }
 
     /**
-     * Gets the inverse of this matrix, if it is square and nonsingular.
+     * Gets the inverse of this matrix, if it is square and nonsingular (invertible).
      *
      * Properties of the inverse matrix include:
      *
@@ -152,7 +314,9 @@ public class Matrix {
      * 4) (A^T)^−1 = (A^−1)^T
      * 5) det(A^−1) = det(A)^−1
      *
-     * @return the inverse matrix
+     * @return the inverse of this matrix
+     * @throws IllegalStateException when matrix is non-square
+     * @throws SingularMatrixException when matrix is singular
      */
     public Matrix invert() {
         precondition(this::isSquare, "The inverse can be computed on a square matrix only");
@@ -164,6 +328,10 @@ public class Matrix {
             // c d
 
             double determinant = elements.get(0, 0) * elements.get(1, 1) - elements.get(0, 1) * elements.get(1, 0); // ad - bc
+
+            if (determinant == 0.0d) {
+                throw new SingularMatrixException();
+            }
 
             Matrix inv = new Matrix(size.rows(), size.cols());
             inv.elements.set(0, 0, elements.get(1, 1) / determinant);
@@ -190,6 +358,10 @@ public class Matrix {
 
             double determinant = elements.get(0,0)*A + elements.get(0,1)*B + elements.get(0,2)*C; // aA + bB + cC
 
+            if (determinant == 0.0d) {
+                throw new SingularMatrixException();
+            }
+
             Matrix inv = new Matrix(size.rows(), size.cols());
             inv.elements.set(0,0,A / determinant);
             inv.elements.set(1,0,B / determinant);
@@ -202,11 +374,13 @@ public class Matrix {
             inv.elements.set(2,2,I / determinant);
             return inv;
         } else {
-            return luDecomposition().inverse();
+            return calcLuDecomposition().inverse();
         }
     }
 
     /**
+     * Gets the determinant of this matrix.
+     *
      * Determinants are mainly used as a theoretical tool. They are rarely calculated explicitly in numerical linear algebra,
      * where for applications like checking invertibility and finding eigenvalues the determinant has largely been supplanted
      * by other techniques. Nonetheless, explicitly calculating determinants is required in some situations.
@@ -215,7 +389,7 @@ public class Matrix {
      * Both these approaches are extremely inefficient for large matrices, requiring close to n! operations. A more efficient method
      * is using the LU decomposition, the QR decomposition and others.
      *
-     * Basic properties of the derminant are:
+     * Basic properties of the determinant are:
      *
      * 1) det(I) = 1
      * 2) det(A^T) = det(A)
@@ -225,12 +399,12 @@ public class Matrix {
      * Other important properties of the determinant include the following, which are invariant under elementary row
      * and column operations:
      *
-     * 1. Switching two rows or columns changes the sign.
-     * 2. Scalars can be factored out from rows and columns.
-     * 3. Multiples of rows and columns can be added together without changing the determinant's value.
-     * 4. Scalar multiplication of a row by a constant c multiplies the determinant by c.
-     * 5. A determinant with a row or column of zeros has value 0.
-     * 6. Any determinant with two rows or columns equal has value 0.
+     * 1) Switching two rows or columns changes the sign.
+     * 2) Scalars can be factored out from rows and columns.
+     * 3) Multiples of rows and columns can be added together without changing the determinant's value.
+     * 4) Scalar multiplication of a row by a constant c multiplies the determinant by c.
+     * 5) A determinant with a row or column of zeros has value 0.
+     * 6) Any determinant with two rows or columns equal has value 0.
      *
      * The determinant of a matrix will be zero if
      *
@@ -238,7 +412,11 @@ public class Matrix {
      * ii) Two rows or columns are equal.
      * iii) A row or column is a constant multiple of another row or column (linear dependent).
      *
-     * A matrix is invertible, non-singular, if and only if the determinant is not zero. So, if the determinant is zero, the matrix is singular and does not have an inverse.
+     * A matrix is invertible (non-singular) if and only if the determinant is not zero. So, if the determinant is zero,
+     * the matrix is singular and does not have an inverse.
+     *
+     * @return the determinant of this matrix
+     * @throws IllegalStateException if matrix is non-square
      */
     public double determinant() {
         precondition(this::isSquare, "The determinant can be computed on a square matrix only");
@@ -258,42 +436,77 @@ public class Matrix {
         } else if (isTriangular()) {
             return diagonalPositions().map(p -> elements.get(p.row(), p.col())).reduce(1.0d, (acc, v) -> acc *= v);
         } else {
-            return luDecomposition().determinant();
+            return calcLuDecomposition().determinant();
         }
     }
 
+    /**
+     * Gets the matrix element at specified position
+     *
+     * @param pos the element position
+     * @return the matrix element
+     */
     public double at(Position pos) {
         requireNonNull(pos, "pos can't be null");
         return elements.get(pos.row(), pos.col());
     }
 
+    /**
+     * Gets the matrix element at specified position
+     *
+     * @param row the row position (1-based)
+     * @param col the column position (1-based)
+     * @return the matrix element
+     */
     public double at(int row, int col) {
         return elements.get(requireValidRow(row)-1, requireValidColumn(col)-1);
     }
 
+    /**
+     * Sets the matrix element at specified position
+     *
+     * @param pos the element position
+     * @param value the element value
+     */
     public void setAt(Position pos, double value) {
         requireNonNull(pos, "pos can't be null");
-        requireValidRow(pos.row());
-        requireValidColumn(pos.col());
         elements.set(pos.row(), pos.col(), value);
     }
 
+    /**
+     * Sets the matrix element at specified position
+     *
+     * @param row the row position (1-based)
+     * @param col the column position (1-based)
+     * @param value the element value
+     */
     public void setAt(int row, int col, double value) {
         requireValidRow(row);
         requireValidColumn(col);
         elements.set(row-1, col-1, value);
     }
 
+    /**
+     * Populates the matrix with element values from specified supplier
+     *
+     * @param valueSupplier the element value supplier
+     * @return the populated matrix
+     */
     public Matrix populate(Supplier<Double> valueSupplier) {
         return transform((p, v) -> valueSupplier.get());
     }
 
     /**
+     * Transposes the matrix.
+     *
      * The transpose reflects the elements of a matrix along the diagonal.
      * Properties of the transpose operation:
-     * - (X+Y)^T = X^T + Y^T
-     * - (XZ)^T = Z^T X^T
-     * - (X^T)^T = X
+     *
+     * 1) (X+Y)^T = X^T + Y^T
+     * 2) (XZ)^T = Z^T X^T
+     * 3) (X^T)^T = X
+     *
+     * @return the transposed matrix
      */
     public Matrix transpose() {
         elements = elements.transpose();
@@ -301,18 +514,27 @@ public class Matrix {
         return this;
     }
 
+    /**
+     * Creates a copy of this matrix
+     *
+     * @return a copy of this matrix
+     */
     public Matrix copy() {
         return new Matrix(elements.copy());
     }
 
-
     /**
-     * Performs matrix multiplication using the naïve O(n^3) algorithm.
+     * Calculates the matrix product of this and the specified matrix.
      *
-     * For square matrices whose sizes are powers of two, the Strassen algorithm is much faster (O(n^2.8)) than the naïve algorithm. For other cases, it is significantly slower.
+     * One can form many definitions of matrix multiplication. However, the most useful definition can be motivated by
+     * linear equations and linear transformations on vectors, which have numerous applications in applied mathematics,
+     * physics, and engineering. This definition is often called the matrix product. In words, if A is an n × m matrix
+     * and B is an m × p matrix, their matrix product AB is an n × p matrix, in which the m entries across the rows of
+     * A are multiplied with the m entries down the columns of B.
      *
-     * In linear algebra, the Strassen algorithm, named after Volker Strassen, is an algorithm used for matrix multiplication. It is faster than the standard matrix
-     * multiplication algorithm and is useful in practice for large matrices, but would be slower than the fastest known algorithms for extremely large matrices.
+     * This method performs matrix multiplication using the naïve O(n^3) algorithm. For square matrices whose sizes are powers of two,
+     * the Strassen algorithm is much faster (O(n^2.8)) than the naïve algorithm. For other cases, it is significantly
+     * slower.
      *
      * @param other the matrix to be multiplied with
      * @return the matrix product
@@ -328,7 +550,7 @@ public class Matrix {
             return rowVectorA.innerProduct(colVectorB);
         });
 
-        // The following code is 30% slower than code above
+        // The implementation below is 30% slower than the above
         /*for (int i=0; i<size.rows(); ++i) {
             for (int j=0; j<other.size().cols(); ++j) {
                 double innerProduct = 0.0d;
@@ -342,11 +564,34 @@ public class Matrix {
         return result;
     }
 
-    public Matrix multiplyConstant(double constant) {
-        transform((p,v) -> v * constant);
+    /**
+     * Multiplies with specified scalar value
+     *
+     * @param scalar the scalar to multiply with
+     * @return this matrix after multiplication
+     */
+    public Matrix multiplyScalar(double scalar) {
+        transform((p,v) -> v * scalar);
         return this;
     }
 
+    /**
+     * Divides by specified scalar value
+     *
+     * @param scalar the scalar to divide by
+     * @return this matrix after division
+     */
+    public Matrix divideScalar(double scalar) {
+        transform((p,v) -> v / scalar);
+        return this;
+    }
+
+    /**
+     * Adds specified matrix to this matrix. The matrices must have the same size.
+     *
+     * @param other the matrix to add
+     * @return this matrix after addition
+     */
     public Matrix add(Matrix other) {
         requireNonNull(other, "other can't be null");
         require(() -> size().equals(other.size()), "can't add a matrix of different size");
@@ -354,17 +599,47 @@ public class Matrix {
         return this;
     }
 
+    /**
+     * Subtracts specified matrix from this matrix. The matrices must have the same size.
+     *
+     * @param other the matrix to subtract
+     * @return this matrix after subtraction
+     */
+    public Matrix subtract(Matrix other) {
+        requireNonNull(other, "other can't be null");
+        require(() -> size().equals(other.size()), "can't subtract a matrix of different size");
+        transform((p,v) -> v - other.elements.get(p.row(), p.col()));
+        return this;
+    }
+
+    /**
+     * Modifies the element values using the specfied bi-function
+     *
+     * @param func the function transforming element values
+     * @return this matrix after transformation
+     */
     public Matrix transform(BiFunction<Position, Double, Double> func) {
         requireNonNull(func, "func can't be null");
         rowMajorPositions().forEach(pos -> elements.set(pos.row(), pos.col(), func.apply(pos, elements.get(pos.row(), pos.col()))));
         return this;
     }
 
+    /**
+     * Iterates over the element values, invoking specified consumer
+     *
+     * @param consumer the consumer to invoke on each element value
+     */
     public void forEach(BiConsumer<Position, Double> consumer) {
         requireNonNull(consumer, "consumer can't be null");
         rowMajorPositions().forEach(pos -> consumer.accept(pos, elements.get(pos.row(), pos.col())));
     }
 
+    /**
+     * Tests whether specified predicate holds for any element value
+     *
+     * @param predicate the predicate to test
+     * @return true if predicate holds for at least one element value
+     */
     public boolean anyMatch(BiPredicate<Position, Double> predicate) {
         requireNonNull(predicate, "predicate can't be null");
         return rowMajorPositions().anyMatch(pos -> predicate.test(pos, elements.get(pos.row(), pos.col())));
@@ -378,63 +653,127 @@ public class Matrix {
         return IntStream.rangeClosed(0, size.cols()-1).parallel();
     }
 
+    /**
+     * Gets a stream of element positions in row major order
+     *
+     * @return a stream of positions
+     */
     public Stream<Position> rowMajorPositions() {
         return asStream(rowMajorPositionIterator(), true);
     }
 
+    /**
+     * Gets a stream of element positions in column major order
+     *
+     * @return a stream of positions
+     */
     public Stream<Position> columnMajorPositions() {
         return asStream(columnMajorPositionIterator(), true);
     }
 
+    /**
+     * Gets a stream of element positions along the diagonal
+     *
+     * @return a stream of diagonal positions
+     */
     public Stream<Position> diagonalPositions() {
         return asStream(diagonalPositionIterator(), true);
     }
 
+    /**
+     * Gets a stream of lower triangular element positions
+     *
+     * @return a stream of lower triangular positions
+     */
     public Stream<Position> lowerTriangularPositions() {
         return asStream(lowerTriangularPositionIterator(), true);
     }
 
+    /**
+     * Gets a position iterator running in row major order
+     *
+     * @return a row major position iterator
+     */
     public PositionIterator rowMajorPositionIterator() {
         return PositionIterator.rowMajor(size);
     }
 
+    /**
+     * Gets a position iterator running in column major order
+     *
+     * @return a column major position iterator
+     */
     public PositionIterator columnMajorPositionIterator() {
         return PositionIterator.columnMajor(size);
     }
 
+    /**
+     * Gets a position iterator running through diagonal elements
+     *
+     * @return a diagonal position iterator
+     */
     public PositionIterator diagonalPositionIterator() {
         return PositionIterator.diagonal(size);
     }
 
+    /**
+     * Gets a position iterator running through lower triangular elements
+     *
+     * @return a lower triangular position iterator
+     */
     public PositionIterator lowerTriangularPositionIterator() {
         return PositionIterator.lowerTriangle(size);
     }
 
+    /**
+     * Gets the specified row vector.
+     * Modifications of the vector are reflected in the matrix.
+     *
+     * @param row the row (1-based)
+     * @return the specified row vector
+     */
     public Vector rowVector(int row) {
         return Vector.from(elements.row(requireValidRow(row)-1));
     }
 
+    /**
+     * Gets the specified column vector.
+     * Modifications of the vector are reflected in the matrix.
+     *
+     * @param col the column (1-based)
+     * @return the specified column vector
+     */
     public Vector columnVector(int col) {
         return Vector.from(elements.column(requireValidColumn(col)-1));
     }
 
     /**
-     * To apply a set of this kind of row operation, one might create a scaling matrix S and multiply with the matrix.
-     * @param row the row number (zero-based)
-     * @param constant
-     * @return
+     * Performs the elementary row operation <strong>Row Multiplication</strong>,
+     * i.e. multiplying a row with a non-zero constant.
+     *
+     * To apply a set of this kind of row operation, one might create a scaling matrix S and multiply
+     * with the matrix.
+     *
+     * @param row the row number (0-based)
+     * @param constant the constant to multiply with
+     * @return this matrix after row operation
      */
     Matrix rowOp_multiplyConstant(int row, double constant) {
-        require(() -> constant != 0.0d, "constant must be nonzero");
+        require(() -> constant != 0.0d, "constant must be non-zero");
         columnIndices().forEach(j -> elements.set(row, j, constant * elements.get(row, j)));
         return this;
     }
 
     /**
-     * To apply a set of this kind of row operation, one might create a permutation matrix P and multiply with the matrix.
-     * @param rowA the first row number (zero-based)
-     * @param rowB the second row number (zero-based)
-     * @return
+     * Performs the elementary row operation <strong>Row Switching</strong>,
+     * i.e. switching a row within the matrix with another row.
+     *
+     * To apply a set of this kind of row operation, one might create a permutation matrix P and multiply
+     * with the matrix.
+     *
+     * @param rowA the first row number (0-based)
+     * @param rowB the second row number (0-based)
+     * @return this matrix after row operation
      */
     Matrix rowOp_swapRows(int rowA, int rowB) {
         columnIndices().forEach(j -> {
@@ -446,11 +785,16 @@ public class Matrix {
     }
 
     /**
-     * To apply a set of this kind of row operation, one might create an elimination matrix M and multiply with the matrix.
-     * @param row the row number (zero-based)
-     * @param multiple
-     * @param otherRow the row number (zero-based) of other row
-     * @return
+     * Performs the elementary row operation <strong>Row Addition</strong>,
+     * i.e. replacing a row by the sum of that row and a multiple of another row.
+     *
+     * To apply a set of this kind of row operation, one might create an elimination matrix M
+     * and multiply with the matrix.
+     *
+     * @param row the row number (0-based)
+     * @param multiple the multiplication constant
+     * @param otherRow the row number (0-based) of other row
+     * @return this matrix after row operation
      */
     Matrix rowOp_addMultipleOfOtherRow(int row, double multiple, int otherRow) {
         require(() -> row != otherRow, "can't add multiple of the same row");
@@ -459,12 +803,15 @@ public class Matrix {
     }
 
     /**
-     * Gaussian Elimination Method (GEM).
+     * Performs the <strong>Gaussian Elimination Method</strong> (GEM).
      *
-     * Reduces the matrix to its row echelon form using elementary row operations..
+     * Reduces the matrix to its row echelon form using elementary row operations.
      * Using partial pivoting to reduce numeric instability (accumulated round-off errors due to small pivots).
      * Gaussian elimination with partial pivoting is considered to be one of the most fundamental algorithms
      * in numerical linear algebra, e.g. for solving systems of linear equations.
+     *
+     * @return this matrix after gaussian elimination
+     * @throws SingularMatrixException when matrix is singular
      */
     public Matrix gaussianElimination() {
         int minDim = Math.min(size.rows(), size.cols());
@@ -495,6 +842,8 @@ public class Matrix {
     }
 
     /**
+     * Gets the k'th pivot row for partial pivoting.
+     *
      * The pivot or pivot element is the element of a matrix, or an array, which is selected first by an algorithm (e.g. Gaussian elimination,
      * simplex algorithm, etc.), to do certain calculations. In the case of matrix algorithms, a pivot entry is usually required to be at least
      * distinct from zero, and often distant from it; in this case finding this element is called pivoting. Pivoting may be followed by an interchange
@@ -510,8 +859,8 @@ public class Matrix {
      *
      * This method finds the row with the largest absolute value looking from the diagonal downwards at specified column. Used in partial pivoting.
      *
-     * @param k the diagonal element (i.e. column) to find pivot row for (zero-based)
-     * @return the row (zero-based) holding the pivot element. The return value is >= k.
+     * @param k the diagonal element (i.e. column) to find pivot row for (0-based)
+     * @return the row (0-based) holding the pivot element. The return value is always >= k.
      * @throws SingularMatrixException when the largest absolute value is close to zero, indicating a singular matrix.
      */
     private int partialPivotRow(int k) {
@@ -534,14 +883,19 @@ public class Matrix {
     }
 
     /**
-     * Gauss-Jordan Elimination.
+     * Performs <strong>Gauss-Jordan Elimination</strong> on the matrix.
      *
      * Reduces the matrix to its reduced row echelon form. This form tells whether the linear system has
-     * - A unique solution
-     * - No solution
-     * - Infinitie solutions
-     * Same as Gaussian Elimination + back substitution.
-     * Used to find the inverse of an invertible matrix.
+     *
+     *   i) A unique solution
+     *  ii) No solution
+     * iii) Infinitie solutions
+     *
+     * Same as Gaussian Elimination, succeeded by back substitution.
+     * Often used to find the inverse of an invertible matrix.
+     *
+     * @return this matrix after gauss jordan elimination
+     * @throws SingularMatrixException when matrix is singular
      */
     public Matrix gaussJordanElimination() {
         gaussianElimination();
@@ -578,6 +932,8 @@ public class Matrix {
     }
 
     /**
+     * Performs LU decomposition of the matrix.
+     *
      * In numerical analysis, LU decomposition (where 'LU' stands for 'lower upper', and also called LU factorization)
      * factors a matrix as the product of a lower triangular matrix and an upper triangular matrix. The product sometimes
      * includes a permutation matrix as well (to avoid numerical instability). The LU decomposition can be viewed as the matrix
@@ -590,8 +946,11 @@ public class Matrix {
      * of the physical matrix belongs to the U matrix.
      *
      * This LU decomposition algorithm requires 2n^3/3 operations for a n x n matrix.
+     *
+     * @return the result of the LU decomposition
+     * @throws SingularMatrixException when matrix is singular
      */
-    public LUDecompositionResult luDecomposition() {
+    public LUDecompositionResult calcLuDecomposition() {
         precondition(this::isSquare, "LU decomposition can be performed on a square matrix only");
 
         int d = size.rows();
@@ -643,11 +1002,20 @@ public class Matrix {
         return new LUDecompositionResult(LU, pi, signOfDeterminant);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return toString(NumberFormatter.pretty());
     }
 
+    /**
+     * Formats the element values into a string using the specified value formatter
+     *
+     * @param formatter the element value formatter
+     * @return a string representation of this matrix
+     */
     public String toString(Function<Double, String> formatter) {
         requireNonNull(formatter, "formatter can't be null");
         StringBuilder sb = new StringBuilder();
@@ -658,6 +1026,9 @@ public class Matrix {
         return sb.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
